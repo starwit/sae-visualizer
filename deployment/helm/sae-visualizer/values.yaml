@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: starwitorg/sae-visualizer
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ${project.version}
+
+nameOverride: ""
+fullnameOverride: "alert-viewer"
+
+app:
+  context_path: "/"
+
+service:
+  port: 8080
+
+

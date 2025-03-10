@@ -1,0 +1,9 @@
+apiVersion: v2
+name: sae-visualizer-chart
+description: A Helm chart to deploy sae visualizer to Kubernetes
+
+type: application
+
+version: ${project.version}
+
+appVersion: "${project.version}"
