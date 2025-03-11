@@ -13,7 +13,11 @@ export default defineConfig(({command}) => {
           usePolling: true
         },
         proxy: {
-          "/api": "http://localhost:8080"
+          "/api": "http://localhost:8080",
+          "/sae-visualizer/location-websocket": {
+            target: "http://localhost:8080",
+            ws: true
+          }
         }
       },
     };
