@@ -50,19 +50,6 @@ function TrajectoryMap() {
             }            
         });
         setMarker(newMarkers);
-
-    }
-
-    function updateOrAddEntry(entry) {
-        let newEntry = entry;
-        let markerList = marker.slice();
-        let index = markerList.findIndex((item) => item.id === entry.id);
-        if (index !== -1) {
-            markerList[index] = newEntry;
-        } else {
-            markerList.push(newEntry);
-        }
-        setMarker(markerList);
     }
 
     function createBaseMapLayer() {
