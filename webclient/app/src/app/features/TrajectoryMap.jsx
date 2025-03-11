@@ -2,15 +2,18 @@ import { DeckGL } from "@deck.gl/react";
 import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer, IconLayer } from "@deck.gl/layers";
-import AlertRest from "../services/AlertRest";
 import React, { useEffect, useMemo, useState } from "react";
 import {useTranslation} from 'react-i18next';
 
+import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
 
 function TrajectoryMap() {
     const {t} = useTranslation();
-    const [marker, setMarker] = useState([]);
+    const streamRest = useMemo(() => new StreamRest(), []);
+    const [streams, setStreams] = useState([]);
+    const [marker, setMarker] = useState({});
+    const [layers, setLayers] = useState([]);
 
     // Set initial map position and zoom level
     const INITIAL_VIEW_STATE = { 
@@ -21,35 +24,48 @@ function TrajectoryMap() {
         bearing: 0          // No rotation
     };
 
-    const layers = [
-        createBaseMapLayer(),
-        createIconLayer()
-    ];
-
     // Create map view settings - enable map repetition when scrolling horizontally
     const MAP_VIEW = new MapView({ repeat: true });
 
     useEffect(() => {
-        const webSocketClient = new WebSocketClient(handleMessage);
-        webSocketClient.connect();
+        streamRest.getAvailableStreams().then((response) => {
+            setStreams(response.data);
+            createIconLayerPerStream(response.data);
+            const webSocketClient = new WebSocketClient(handleMessage, response.data);
+            webSocketClient.connect();    
+        });
     }, []);
 
-    function handleMessage(trackedObjectList) {
+    function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
             if(trackedObject.hasGeoCoordinates) {
                 let newEntry = {}
+                newEntry.streamId = trackedObject.streamId;
                 newEntry.id = trackedObject.objectId;
                 newEntry.name = trackedObject.objectId + ' c' + trackedObject.classId;
                 newEntry.class = trackedObject.classId;
                 newEntry.timestamp = trackedObject.receiveTimestamp;
                 newEntry.coordinates = [trackedObject.coordinates.longitude, trackedObject.coordinates.latitude];
-                //updateOrAddEntry(newEntry);
                 newMarkers.push(newEntry);
             } else {
             }            
         });
-        setMarker(newMarkers);
+        marker[streamId] = newMarkers;
+        setMarker(marker);
+        console.log(layers);
+    }
+
+    function createIconLayerPerStream(streams) {        
+        let layers = [
+            createBaseMapLayer()
+        ];        
+        for (let stream of streams) {
+            marker[stream] = [];
+            setMarker(marker);
+            layers.push(createIconLayer(stream));
+        }
+        console.log(layers);
     }
 
     function createBaseMapLayer() {
@@ -65,7 +81,6 @@ function TrajectoryMap() {
                     bbox: { west, south, east, north }
                 } = props.tile;
 
-                // Create image layer for the tile
                 return new BitmapLayer(props, {
                     data: null,
                     image: props.data,
@@ -75,10 +90,10 @@ function TrajectoryMap() {
         })
     }
 
-    function createIconLayer() {
+    function createIconLayer(streamId) {
         return new IconLayer({
-            id: 'IconLayer',
-            data: marker,
+            id: 'IconLayer-' + streamId,
+            data: marker[streamId],
 
             getColor: d => [140, 0, 0],
             getIcon: d => 'marker',
@@ -88,7 +103,7 @@ function TrajectoryMap() {
             iconMapping: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.json',
             pickable: true,
         });
-    }
+    }    
 
     return (
         <>
