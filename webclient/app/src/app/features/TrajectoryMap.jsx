@@ -11,9 +11,11 @@ import WebSocketClient from "../services/WebSocketClient";
 function TrajectoryMap() {
     const {t} = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
-    const [streams, setStreams] = useState([]);
     const [marker, setMarker] = useState({});
-    const [layers, setLayers] = useState([]);
+    const [markerNorth, setMarkerNorth] = useState({});
+    const [markerSouth, setMarkerSouth] = useState({});
+    const [markerEast, setMarkerEast] = useState({});
+    const [markerWest, setMarkerWest] = useState({});
 
     // Set initial map position and zoom level
     const INITIAL_VIEW_STATE = { 
@@ -25,47 +27,50 @@ function TrajectoryMap() {
     };
 
     // Create map view settings - enable map repetition when scrolling horizontally
-    const MAP_VIEW = new MapView({ repeat: true });
+    const MAP_VIEW = new MapView({ repeat: true });  
+
+    const streams = ['meckauer:north','meckauer:south','meckauer:east','meckauer:west'];
+    
+    const layers = [
+        createBaseMapLayer(),
+        createIconLayer(markerNorth, "north"),
+        createIconLayer(markerSouth, "south"),
+        createIconLayer(markerEast, "east"),
+        createIconLayer(markerWest, "west"),
+    ];    
 
     useEffect(() => {
-        streamRest.getAvailableStreams().then((response) => {
-            setStreams(response.data);
-            createIconLayerPerStream(response.data);
-            const webSocketClient = new WebSocketClient(handleMessage, response.data);
-            webSocketClient.connect(); 
-        });
+        const webSocketClient = new WebSocketClient(handleMessage, streams);
+        webSocketClient.connect(); 
     }, []);
 
     function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
             if(trackedObject.hasGeoCoordinates) {
-                let newEntry = {}
-                newEntry.streamId = trackedObject.streamId;
-                newEntry.id = trackedObject.objectId;
-                newEntry.name = trackedObject.objectId + ' c' + trackedObject.classId;
-                newEntry.class = trackedObject.classId;
-                newEntry.timestamp = trackedObject.receiveTimestamp;
-                newEntry.coordinates = [trackedObject.coordinates.longitude, trackedObject.coordinates.latitude];
-                newMarkers.push(newEntry);
+                let newMarker = {}
+                newMarker.streamId = trackedObject.streamId;
+                newMarker.id = trackedObject.objectId;
+                newMarker.name = trackedObject.objectId + ' c' + trackedObject.classId;
+                newMarker.class = trackedObject.classId;
+                newMarker.timestamp = trackedObject.receiveTimestamp;
+                newMarker.coordinates = [trackedObject.coordinates.longitude, trackedObject.coordinates.latitude];
+                newMarkers.push(newMarker);
             } else {
             }            
         });
-        marker[streamId] = newMarkers;
-        setMarker(marker);
-        console.log(layers);
-    }
-
-    function createIconLayerPerStream(streams) {        
-        let layers = [
-            createBaseMapLayer()
-        ];        
-        for (let stream of streams) {
-            marker[stream] = [];
-            setMarker(marker);
-            layers.push(createIconLayer(stream));
+        if(streamId === 'meckauer:north') {
+            setMarkerNorth(newMarkers);
         }
-        setLayers(layers);
+        if(streamId === 'meckauer:south') {
+            setMarkerSouth(newMarkers);
+        }
+        if(streamId === 'meckauer:east') {
+            setMarkerEast(newMarkers);
+        }
+        if(streamId === 'meckauer:west') {
+            setMarkerWest(newMarkers);
+        }                
     }
 
     function createBaseMapLayer() {
@@ -90,10 +95,11 @@ function TrajectoryMap() {
         })
     }
 
-    function createIconLayer(streamId) {
+    function createIconLayer(markerArray, streamId) {
+
         return new IconLayer({
             id: 'IconLayer-' + streamId,
-            data: marker[streamId],
+            data: markerArray,
 
             getColor: d => [140, 0, 0],
             getIcon: d => 'marker',
