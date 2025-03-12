@@ -32,7 +32,7 @@ function TrajectoryMap() {
             setStreams(response.data);
             createIconLayerPerStream(response.data);
             const webSocketClient = new WebSocketClient(handleMessage, response.data);
-            webSocketClient.connect();    
+            webSocketClient.connect(); 
         });
     }, []);
 
@@ -65,7 +65,7 @@ function TrajectoryMap() {
             setMarker(marker);
             layers.push(createIconLayer(stream));
         }
-        console.log(layers);
+        setLayers(layers);
     }
 
     function createBaseMapLayer() {

@@ -62,10 +62,10 @@ public class MessageService {
                 t.getCoordinates().setLongitude(detection.getGeoCoordinate().getLongitude());                
             }
             trackedObjects.add(t);
-            //log.debug("Added message to queue: {}", t.toString());
         }
 
         this.template.convertAndSend("/topic/location/" + streamId, trackedObjects);
+        log.info("Sent " + trackedObjects.size() + " messages");
     }
 
     private TrajectoryDTO setNormalizedImageCoordinates(TrajectoryDTO t, BoundingBox bb) {
