@@ -2,6 +2,7 @@
 const translationEnEN = {
     "arrow.info": "Test",
     "app.title": "SAE Visualizer",
+    "map.title": "Map Live View",
     "map.tooltip": "Show Map",
     "trajectory.tooltip": "Show Trajectories",
     "trajectory.title": "Trajectory View",

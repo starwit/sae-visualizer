@@ -65,7 +65,7 @@ public class MessageService {
         }
 
         this.template.convertAndSend("/topic/location/" + streamId, trackedObjects);
-        log.info("Sent " + trackedObjects.size() + " messages");
+        log.debug("Sent " + trackedObjects.size() + " messages");
     }
 
     private TrajectoryDTO setNormalizedImageCoordinates(TrajectoryDTO t, BoundingBox bb) {

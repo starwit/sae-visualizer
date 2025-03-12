@@ -3,51 +3,51 @@ import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer, IconLayer } from "@deck.gl/layers";
 import React, { useEffect, useMemo, useState } from "react";
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
+import { Box, Card, IconButton, Stack } from "@mui/material";
 
 function TrajectoryMap() {
-    const {t} = useTranslation();
+    const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
-    const [marker, setMarker] = useState({});
+    const webSocketClient = useMemo(() => new WebSocketClient(), []);
+
+    const [streams, setStreams] = useState({});
     const [markerNorth, setMarkerNorth] = useState({});
     const [markerSouth, setMarkerSouth] = useState({});
     const [markerEast, setMarkerEast] = useState({});
     const [markerWest, setMarkerWest] = useState({});
 
-    // Set initial map position and zoom level
-    const INITIAL_VIEW_STATE = { 
+    const INITIAL_VIEW_STATE = {
         longitude: 10.787001,     // Initial longitude (X coordinate)
         latitude: 52.424239,      // Initial latitude (Y coordinate)
         zoom: 19,            // Initial zoom level
         pitch: 0,           // No tilt
         bearing: 0          // No rotation
     };
-
-    // Create map view settings - enable map repetition when scrolling horizontally
-    const MAP_VIEW = new MapView({ repeat: true });  
-
-    const streams = ['meckauer:north','meckauer:south','meckauer:east','meckauer:west'];
-    
+    const MAP_VIEW = new MapView({ repeat: true });
     const layers = [
         createBaseMapLayer(),
-        createIconLayer(markerNorth, "north"),
-        createIconLayer(markerSouth, "south"),
-        createIconLayer(markerEast, "east"),
-        createIconLayer(markerWest, "west"),
-    ];    
+        createIconLayer(markerNorth, "north", [100, 0, 100]),
+        createIconLayer(markerSouth, "south", [190, 0, 0]),
+        createIconLayer(markerEast, "east", [140, 0, 0]),
+        createIconLayer(markerWest, "west", [0, 100, 100]),
+    ];
 
     useEffect(() => {
-        const webSocketClient = new WebSocketClient(handleMessage, streams);
-        webSocketClient.connect(); 
+        streamRest.getAvailableStreams().then((response) => {
+            setStreams(response.data);
+        });
     }, []);
 
     function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
-            if(trackedObject.hasGeoCoordinates) {
+            if (trackedObject.hasGeoCoordinates) {
                 let newMarker = {}
                 newMarker.streamId = trackedObject.streamId;
                 newMarker.id = trackedObject.objectId;
@@ -57,20 +57,20 @@ function TrajectoryMap() {
                 newMarker.coordinates = [trackedObject.coordinates.longitude, trackedObject.coordinates.latitude];
                 newMarkers.push(newMarker);
             } else {
-            }            
+            }
         });
-        if(streamId === 'meckauer:north') {
+        if (streamId === 'meckauer:north') {
             setMarkerNorth(newMarkers);
         }
-        if(streamId === 'meckauer:south') {
+        if (streamId === 'meckauer:south') {
             setMarkerSouth(newMarkers);
         }
-        if(streamId === 'meckauer:east') {
+        if (streamId === 'meckauer:east') {
             setMarkerEast(newMarkers);
         }
-        if(streamId === 'meckauer:west') {
+        if (streamId === 'meckauer:west') {
             setMarkerWest(newMarkers);
-        }                
+        }
     }
 
     function createBaseMapLayer() {
@@ -95,13 +95,13 @@ function TrajectoryMap() {
         })
     }
 
-    function createIconLayer(markerArray, streamId) {
+    function createIconLayer(markerArray, streamId, color) {
 
         return new IconLayer({
             id: 'IconLayer-' + streamId,
             data: markerArray,
 
-            getColor: d => [140, 0, 0],
+            getColor: d => color,
             getIcon: d => 'marker',
             getPosition: d => d.coordinates,
             getSize: 30,
@@ -109,19 +109,48 @@ function TrajectoryMap() {
             iconMapping: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.json',
             pickable: true,
         });
-    }    
+    }
+
+    function startStream() {
+        webSocketClient.setup(handleMessage, streams);
+        webSocketClient.connect();
+    }
+
+    function stopStream() {
+        webSocketClient.disconnect();
+    }
 
     return (
         <>
-            <div>
-                <h1>{t('map.title')}</h1>
-            </div>
-            <DeckGL
-                layers={layers}               // Add map layers
-                views={MAP_VIEW}              // Add map view settings
-                initialViewState={INITIAL_VIEW_STATE}  // Set initial position
-                controller={{ dragRotate: false }}       // Disable rotation
-            />
+            <Stack direction="column" spacing={2}>
+                <div>
+                    <h1>{t('map.title')}</h1>
+                </div>
+                <Card>
+                <Stack direction="row" spacing={2}>
+                    <div>
+                        <IconButton onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton>
+                    </div>
+                    <div>
+                        <IconButton onClick={stopStream}><StopCircleIcon /></IconButton>
+                    </div>
+                </Stack>
+                </Card>
+                <Box sx={{
+                    border: 1,
+                    height: 850,
+                    width: "auto",
+                    m: 5,
+                    position: 'relative'
+                }}>
+                    <DeckGL
+                        layers={layers}               // Add map layers
+                        views={MAP_VIEW}              // Add map view settings
+                        initialViewState={INITIAL_VIEW_STATE}  // Set initial position
+                        controller={{ dragRotate: false }}       // Disable rotation
+                    />
+                </Box>
+            </Stack>
         </>
     );
 }
