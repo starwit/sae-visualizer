@@ -2,6 +2,7 @@
 const translationDeDE = {
     "arrow.info": "Test",
     "app.title": "SAE Visualizer",
+    "map.title": "Live Kartenansicht",
     "map.tooltip": "Kartenansicht",
     "trajectory.tooltip": "Trajektorienansicht",
     "trajectory.title": "Trajektorienansicht",

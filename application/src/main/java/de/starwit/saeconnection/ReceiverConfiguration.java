@@ -1,6 +1,7 @@
 package de.starwit.saeconnection;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +24,8 @@ public class ReceiverConfiguration {
 
     private Logger log = LoggerFactory.getLogger(ReceiverConfiguration.class);
 
-    @Value("${spring.redis.streamId:test}")
-    String streamId;
+    @Value("#{'${spring.redis.streamIds}'.split(',')}") 
+    List<String> streamIds;
 
     @Autowired
     MessageService messageService;
@@ -51,10 +52,14 @@ public class ReceiverConfiguration {
         StreamMessageListenerContainer<String, MapRecord<String, String, String>> container = StreamMessageListenerContainer
                 .create(connectionFactory, options);
 
-        log.info("Start listening to messages from stream " + streamId);
-        container.receive(
-                StreamOffset.latest(streamId),
-                this::handleMessage);
+        log.info("Start listening to messages from stream " + String.join(", ", streamIds));
+        for (String streamId : streamIds) {
+            container.receive(
+                    StreamOffset.latest(streamId),
+                    this::handleMessage);
+        }
+
+        messageService.setAvailableStreams(streamIds);
 
         return container;
     }

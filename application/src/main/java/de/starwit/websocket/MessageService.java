@@ -8,7 +8,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -26,29 +25,28 @@ public class MessageService {
     private Logger log = LoggerFactory.getLogger(MessageService.class);
 
     @Autowired
-    private SimpMessagingTemplate template;    
-
-    @Value("${spring.redis.streamId:test}")
-    String streamId;
+    private SimpMessagingTemplate template; 
+    
+    private List<String> availableStreams = new ArrayList<>();
 
     public void handleMessage(MapRecord<String, String, String> message) {
-        //log.debug("Message received: {}", message.getId());
+        log.debug("Message received: {} from {}", message.getId(), message.getStream());
         String protobuf_data = message.getValue().get("proto_data_b64");
         try {
             SaeMessage proto = SaeMessage.parseFrom(Base64.getDecoder().decode(protobuf_data));
-            convertToDTOToQueue(proto);
+            convertToDTOToQueue(proto, message.getStream());
         } catch (InvalidProtocolBufferException e) {
-            log.error("Error decoding proto from message. streamId=" + streamId);
+            log.error("Error decoding proto from message. streamId=" + message.getStream());
             log.debug(e.getMessage());
         }
     }
 
-    private void convertToDTOToQueue(SaeMessage saeMessage) {
+    private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
         
-        List<TrajectoryDTO> trackedObjects = new ArrayList<>();
+        List<TrajectoryDto> trackedObjects = new ArrayList<>();
 
         for (Detection detection : saeMessage.getDetectionsList()) {
-            var t = new TrajectoryDTO();
+            var t = new TrajectoryDto();
             byte[] objectID = detection.getObjectId().toByteArray();             
             t.setObjectId(HexFormat.of().formatHex(objectID));
             t.setClassId(detection.getClassId());
@@ -64,18 +62,26 @@ public class MessageService {
                 t.getCoordinates().setLongitude(detection.getGeoCoordinate().getLongitude());                
             }
             trackedObjects.add(t);
-            //log.debug("Added message to queue: {}", t.toString());
         }
 
-        this.template.convertAndSend("/topic/location", trackedObjects);
+        this.template.convertAndSend("/topic/location/" + streamId, trackedObjects);
+        log.debug("Sent " + trackedObjects.size() + " messages");
     }
 
-    private TrajectoryDTO setNormalizedImageCoordinates(TrajectoryDTO t, BoundingBox bb) {
+    private TrajectoryDto setNormalizedImageCoordinates(TrajectoryDto t, BoundingBox bb) {
         // compute center of bounding box
         float x = bb.getMaxX() - bb.getMinX();
         float y = bb.getMaxY() - bb.getMinY();
         t.getCoordinates().setX(x);
         t.getCoordinates().setY(y);
         return t;
+    }
+
+    public List<String> getAvailableStreams() {
+        return availableStreams;
+    }
+
+    public void setAvailableStreams(List<String> availableStreams) {
+        this.availableStreams = availableStreams;
     }
 }

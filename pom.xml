@@ -24,6 +24,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<spring.version>3.4.3</spring.version>
+		<openapi-version>2.7.0</openapi-version>
 	</properties>
 
 	<modules>
@@ -48,6 +49,11 @@
 				<artifactId>spring-boot-starter-websocket</artifactId>
 				<version>${spring.version}</version>				
 			</dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${openapi-version}</version>
+            </dependency>			
 			<dependency>
 				<groupId>de.starwit</groupId>
 				<artifactId>vision-api</artifactId>
