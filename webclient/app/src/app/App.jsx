@@ -3,9 +3,9 @@ import {CssBaseline} from "@mui/material";
 import '@mui/material/styles/styled';
 import React from "react";
 import {Route, Routes} from "react-router-dom";
-import MyAppBar from "./commons/MyAppBar";
+import StarwitAppBar from "./commons/StarwitAppBar";
 import ErrorHandler from "./commons/errorHandler/ErrorHandler";
-import AlertFooter from "./commons/AlertFooter";
+import StarwitFooter from "./commons/StarwitFooter";
 import TrajectoryMap from "./features/TrajectoryMap"
 import TrajectoryView from "./features/TrajectoryView"
 
@@ -14,14 +14,14 @@ function App() {
         <React.Fragment>
             <ErrorHandler>
                 <CssBaseline />
-                <MyAppBar />
+                <StarwitAppBar />
                 <Container sx={{paddingTop: "4em"}}>
                     <Routes>
                         <Route path="/trajectory" element={<TrajectoryView />} />
                         <Route path="/" element={<TrajectoryMap />} />
                     </Routes>
                 </Container>
-                <AlertFooter />
+                <StarwitFooter />
             </ErrorHandler>
         </React.Fragment>
     );
