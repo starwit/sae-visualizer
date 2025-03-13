@@ -29,6 +29,13 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: SPRING_REDIS_HOST
+              value: {{ .Values.config.valkey.host }}
+            - name: SPRING_REDIS_PORT
+              value: {{ .Values.config.valkey.port }}
+            - name: SPRING_REDIS_STREAMIDS
+              value: {{ join ", " .Values.config.valkey.stream_ids }}              
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
