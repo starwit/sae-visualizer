@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
@@ -10,31 +10,23 @@ import StopCircleIcon from '@mui/icons-material/StopCircle';
 function TrajectoryView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
-    const webSocketClient = useMemo(() => new WebSocketClient(), []);    
+    const wsClient = useRef(new WebSocketClient());
 
     const [streams, setStreams] = useState({});
     const [markerList, setMarkerList] = useState({});
     const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
-        streamRest.getAvailableStreams().then((response) => {
-            setStreams(response.data);
+        streamRest.getAvailableStreams().then(response => {
+            const streams = response.data;
+            setStreams(streams);
             setShowMap(true);
+    
+            wsClient.current.setup(handleMessage, streams);
         });
+        return () => wsClient.current.disconnect();
     }, []);
-
-    useEffect(() => {
-    }, [markerList]);    
-
-    function startStream() {
-        webSocketClient.setup(handleMessage, streams);
-        webSocketClient.connect();
-    }
-
-    function stopStream() {
-        webSocketClient.disconnect();
-    }
-
+    
     function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
@@ -50,10 +42,14 @@ function TrajectoryView() {
             } else {
             }
         });
-        let tmpMarkerList = {...markerList};
-        console.log(markerList);
-        tmpMarkerList[streamId] = newMarkers;
-        setMarkerList(tmpMarkerList);
+        setMarkerList(prevMarkerList => ({...prevMarkerList, [streamId]: newMarkers}));
+    }
+    function startStream() {
+        wsClient.current.connect();
+    }
+
+    function stopStream() {
+        wsClient.current.disconnect();
     }
 
     return (
