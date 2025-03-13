@@ -43,10 +43,10 @@ public class MessageService {
 
     private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
         
-        List<TrajectoryDTO> trackedObjects = new ArrayList<>();
+        List<TrajectoryDto> trackedObjects = new ArrayList<>();
 
         for (Detection detection : saeMessage.getDetectionsList()) {
-            var t = new TrajectoryDTO();
+            var t = new TrajectoryDto();
             byte[] objectID = detection.getObjectId().toByteArray();             
             t.setObjectId(HexFormat.of().formatHex(objectID));
             t.setClassId(detection.getClassId());
@@ -68,7 +68,7 @@ public class MessageService {
         log.debug("Sent " + trackedObjects.size() + " messages");
     }
 
-    private TrajectoryDTO setNormalizedImageCoordinates(TrajectoryDTO t, BoundingBox bb) {
+    private TrajectoryDto setNormalizedImageCoordinates(TrajectoryDto t, BoundingBox bb) {
         // compute center of bounding box
         float x = bb.getMaxX() - bb.getMinX();
         float y = bb.getMaxY() - bb.getMinY();

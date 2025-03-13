@@ -2,7 +2,7 @@ package de.starwit.websocket;
 
 import java.time.LocalDateTime;
 
-public class TrajectoryDTO {
+public class TrajectoryDto {
 
 	/**
 	 * From which stream is this data coming from?
