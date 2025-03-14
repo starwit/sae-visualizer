@@ -7,7 +7,8 @@ import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import DeckGL from "@deck.gl/react";
 import { OrthographicView } from "@deck.gl/core";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import ObjectTracker from "../services/ObjectTracker";
 
 function TrajectoryView() {
     const { t } = useTranslation();
@@ -19,7 +20,8 @@ function TrajectoryView() {
 
     const containerRef = useRef(null);
     const [trajectories, setTrajectories] = useState([]);
-    const [frameInfo, setframeInfo] = useState({});
+    const [shape, setShape] = useState({});
+    const [objectTracker] = useState(() => new ObjectTracker(500));
 
     const [viewState, setViewState] = useState({
         target: [0, 0, 0],
@@ -38,19 +40,16 @@ function TrajectoryView() {
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
-
-            wsClient.current.setup(handleMessage, streams);
         });
-        return () => wsClient.current.disconnect();
     }, []);
 
     useEffect(() => {
         const updateDimensions = () => {
-          if (containerRef.current && frameInfo?.shape) {
+          if (containerRef.current && shape) {
             const containerWidth = window.innerWidth;
             const containerHeight = window.innerHeight;
             
-            const { width: frameWidth, height: frameHeight } = frameInfo.shape;
+            const { width: frameWidth, height: frameHeight } = shape;
             setDimensions({ width: frameWidth, height: frameHeight });
             
             // Calculate zoom level to fit view
@@ -81,32 +80,23 @@ function TrajectoryView() {
         updateDimensions();
         window.addEventListener('resize', updateDimensions);
         return () => window.removeEventListener('resize', updateDimensions);
-      }, [frameInfo]);    
+      }, [shape]);    
 
     function handleMessage(trackedObjectList, streamId) {
-        let newMarkers = [];
-        trackedObjectList.forEach(trackedObject => {
-            if (trackedObject.hasGeoCoordinates) {
-                let newMarker = {}
-                newMarker.streamId = trackedObject.streamId;
-                newMarker.id = trackedObject.objectId;
-                newMarker.name = trackedObject.objectId + ' c' + trackedObject.classId;
-                newMarker.class = trackedObject.classId;
-                newMarker.timestamp = trackedObject.receiveTimestamp;
-                newMarker.coordinates = [trackedObject.coordinates.longitude, trackedObject.coordinates.latitude];
-                newMarkers.push(newMarker);
-            } else {
-            }
-        });
-        setMarkerList(prevMarkerList => ({ ...prevMarkerList, [streamId]: newMarkers }));
+      if(trackedObjectList.length > 0) {
+        setShape(trackedObjectList[0].shape);
+        const updatedTrajectories = objectTracker.updateTrajectories(trackedObjectList);
+        setTrajectories(updatedTrajectories);        
+      }
     }
 
     function startStream() {
-        //wsClient.current.connect();
+      wsClient.current.setup(handleMessage, streams);
+      wsClient.current.connect();
     }
 
     function stopStream() {
-        //wsClient.current.disconnect();
+      wsClient.current.disconnect();
     }
 
     const handleStreamSelectChange = (event) => {

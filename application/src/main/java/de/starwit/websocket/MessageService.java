@@ -17,6 +17,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import de.starwit.visionapi.Sae.BoundingBox;
 import de.starwit.visionapi.Sae.Detection;
 import de.starwit.visionapi.Sae.SaeMessage;
+import de.starwit.visionapi.Sae.Shape;
 import de.starwit.visionapi.Sae.VideoFrame;
 
 import java.util.ArrayList;
@@ -46,9 +47,7 @@ public class MessageService {
     private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
         
         List<TrajectoryDto> trackedObjects = new ArrayList<>();
-
-        VideoFrame f = saeMessage.getFrame();
-
+        
         for (Detection detection : saeMessage.getDetectionsList()) {
             var t = new TrajectoryDto();
             byte[] objectID = detection.getObjectId().toByteArray();             
@@ -56,6 +55,7 @@ public class MessageService {
             t.setClassId(detection.getClassId());
             t.setReceiveTimestamp(LocalDateTime.now());
             t.setStreamId(streamId);
+            t.setShape(saeMessage.getFrame().getShape().getWidth(), saeMessage.getFrame().getShape().getHeight());
             if (detection.getGeoCoordinate().getLatitude() == 0.0 && detection.getGeoCoordinate().getLongitude() == 0.0) {
                 // Let's hope we never detect objects at geo coordinates 0,0
                 t.setHasGeoCoordinates(false);
@@ -74,8 +74,8 @@ public class MessageService {
 
     private TrajectoryDto setNormalizedImageCoordinates(TrajectoryDto t, BoundingBox bb) {
         // compute center of bounding box
-        float x = bb.getMaxX() - bb.getMinX();
-        float y = bb.getMaxY() - bb.getMinY();
+        float x = ((bb.getMinX() - bb.getMaxX()) / 2) * t.getShape().getWidth();
+        float y = ((bb.getMinY() - bb.getMaxY()) / 2) * t.getShape().getHeight();
         t.getCoordinates().setX(x);
         t.getCoordinates().setY(y);
         return t;
