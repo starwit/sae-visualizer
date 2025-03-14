@@ -8,9 +8,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +23,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
 import de.starwit.websocket.MessageService;
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.ClientOptions.DisconnectedBehavior;
 
 @Configuration
 public class ReceiverConfiguration {
@@ -26,6 +33,12 @@ public class ReceiverConfiguration {
 
     @Value("#{'${spring.redis.streamIds}'.split(',')}") 
     List<String> streamIds;
+
+    @Value("${spring.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.redis.port:6379}")
+    private int redisPort;
 
     @Autowired
     MessageService messageService;
@@ -41,8 +54,20 @@ public class ReceiverConfiguration {
     }
 
     @Bean
-    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer(
-            RedisConnectionFactory connectionFactory) {
+    LettuceConnectionFactory lettuceConnectionFactory() {
+        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
+        ClientOptions options = ClientOptions.builder().autoReconnect(true)
+                .disconnectedBehavior(DisconnectedBehavior.REJECT_COMMANDS).build();
+        LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder().clientOptions(options)
+                .build();
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(redisConfig,
+                clientConfig);
+        factory.setShareNativeConnection(false);
+        return factory;
+    }
+
+    @Bean
+    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer() {
 
         StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -50,7 +75,7 @@ public class ReceiverConfiguration {
                 .build();
 
         StreamMessageListenerContainer<String, MapRecord<String, String, String>> container = StreamMessageListenerContainer
-                .create(connectionFactory, options);
+                .create(lettuceConnectionFactory(), options);
 
         log.info("Start listening to messages from stream " + String.join(", ", streamIds));
         for (String streamId : streamIds) {

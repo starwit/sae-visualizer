@@ -25,6 +25,7 @@
 		<java.version>21</java.version>
 		<spring.version>3.4.3</spring.version>
 		<openapi-version>2.7.0</openapi-version>
+		<lettuce.version>6.5.2.RELEASE</lettuce.version>
 	</properties>
 
 	<modules>
@@ -59,6 +60,16 @@
 				<artifactId>vision-api</artifactId>
 				<version>3.1.0</version>
 			</dependency>
+			<dependency>
+                <groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>${lettuce.version}</version>
+            </dependency>
+			<dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>2.12.0</version>
+            </dependency>
 
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
