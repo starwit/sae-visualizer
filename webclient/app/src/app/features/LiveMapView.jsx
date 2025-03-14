@@ -2,7 +2,6 @@ import { DeckGL } from "@deck.gl/react";
 import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer, IconLayer } from "@deck.gl/layers";
-import React, { useEffect, useMemo, useState } from "react";
 
 function LiveMapView(props) {
     const { markerList, streams } = props;
@@ -22,12 +21,13 @@ function LiveMapView(props) {
         let layers = [
             createBaseMapLayer()
         ];
+
         for (let stream in streams) {
-            let streamId = streams[stream];
-            layers.push(createIconLayer(markerList[streamId], streamId, [100, 0, 100]));
+            let color = streams[stream]
+            layers.push(createIconLayer(markerList[stream], stream, color));
         }
         return layers;
-    }
+    }   
 
     function createBaseMapLayer() {
         return new TileLayer({

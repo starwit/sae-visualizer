@@ -1,49 +1,83 @@
-import { DeckGL } from "@deck.gl/react";
-import { MapView } from '@deck.gl/core';
-import { TileLayer } from "@deck.gl/geo-layers";
-import { BitmapLayer, IconLayer } from "@deck.gl/layers";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
+import StreamRest from "../services/StreamRest";
+import WebSocketClient from "../services/WebSocketClient";
+import LiveMapView from "./LiveMapView";
+import { Box, Card, IconButton, Stack } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
-import StreamRest from "../services/StreamRest";
-import WebSocketClient from "../services/WebSocketClient";
-import { Box, Card, IconButton, Stack } from "@mui/material";
 
 function TrajectoryMap() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
-    const webSocketClient = useMemo(() => new WebSocketClient(), []);
+    const wsClient = useRef(new WebSocketClient());
 
     const [streams, setStreams] = useState({});
-    const [markerNorth, setMarkerNorth] = useState({});
-    const [markerSouth, setMarkerSouth] = useState({});
-    const [markerEast, setMarkerEast] = useState({});
-    const [markerWest, setMarkerWest] = useState({});
-
-    const INITIAL_VIEW_STATE = {
-        longitude: 10.787001,     // Initial longitude (X coordinate)
-        latitude: 52.424239,      // Initial latitude (Y coordinate)
-        zoom: 19,            // Initial zoom level
-        pitch: 0,           // No tilt
-        bearing: 0          // No rotation
-    };
-    const MAP_VIEW = new MapView({ repeat: true });
-    const layers = [
-        createBaseMapLayer(),
-        createIconLayer(markerNorth, "north", [100, 0, 100]),
-        createIconLayer(markerSouth, "south", [190, 0, 0]),
-        createIconLayer(markerEast, "east", [140, 0, 0]),
-        createIconLayer(markerWest, "west", [0, 100, 100]),
-    ];
+    const [markerList, setMarkerList] = useState({});
+    const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
-        streamRest.getAvailableStreams().then((response) => {
-            setStreams(response.data);
+        streamRest.getAvailableStreams().then(response => {
+            const streams = response.data;
+            const colors = generateDistinctColors(Object.keys(response.data).length);
+            let streamsAndColors = {}
+            streams.forEach((stream, index) => {
+                console.log(stream);
+                streamsAndColors[stream] = colors[index];
+            });
+            setStreams(streamsAndColors);
+            setShowMap(true);
+    
+            wsClient.current.setup(handleMessage, streams);
         });
+        return () => wsClient.current.disconnect();
     }, []);
 
+    function generateDistinctColors(n) {
+        const colors = [];
+        // Use golden ratio to help spread the hues evenly
+        const goldenRatio = 0.618033988749895;
+        let hue = Math.random(); // Start at random hue
+    
+        for (let i = 0; i < n; i++) {
+            hue = (hue + goldenRatio) % 1; // Use golden ratio to increment hue
+            
+            // Convert HSV to RGB
+            // Using fixed Saturation (100%) and Value (100%) for vibrant colors
+            const rgb = hsvToRgb(hue, 1, 1);
+            
+            // Scale to your desired range (0-100 in this case)
+            colors.push([
+                Math.round(rgb[0] * 100),
+                Math.round(rgb[1] * 100),
+                Math.round(rgb[2] * 100)
+            ]);
+        }
+        
+        return colors;
+    }
+    
+    function hsvToRgb(h, s, v) {
+        let r, g, b;
+        const i = Math.floor(h * 6);
+        const f = h * 6 - i;
+        const p = v * (1 - s);
+        const q = v * (1 - f * s);
+        const t = v * (1 - (1 - f) * s);
+    
+        switch (i % 6) {
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t; g = p; b = v; break;
+            case 5: r = v; g = p; b = q; break;
+        }
+    
+        return [r, g, b];
+    }     
+    
     function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
@@ -59,82 +93,32 @@ function TrajectoryMap() {
             } else {
             }
         });
-        if (streamId === 'meckauer:north') {
-            setMarkerNorth(newMarkers);
-        }
-        if (streamId === 'meckauer:south') {
-            setMarkerSouth(newMarkers);
-        }
-        if (streamId === 'meckauer:east') {
-            setMarkerEast(newMarkers);
-        }
-        if (streamId === 'meckauer:west') {
-            setMarkerWest(newMarkers);
-        }
-    }
-
-    function createBaseMapLayer() {
-        return new TileLayer({
-            data: "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            minZoom: 0,     // Minimum zoom level
-            maxZoom: 19,    // Maximum zoom level
-            tileSize: 256,  // Size of each map tile
-
-            renderSubLayers: props => {
-                // Get geographical boundaries of the current tile
-                const {
-                    bbox: { west, south, east, north }
-                } = props.tile;
-
-                return new BitmapLayer(props, {
-                    data: null,
-                    image: props.data,
-                    bounds: [west, south, east, north]
-                });
-            }
-        })
-    }
-
-    function createIconLayer(markerArray, streamId, color) {
-
-        return new IconLayer({
-            id: 'IconLayer-' + streamId,
-            data: markerArray,
-
-            getColor: d => color,
-            getIcon: d => 'marker',
-            getPosition: d => d.coordinates,
-            getSize: 30,
-            iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
-            iconMapping: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.json',
-            pickable: true,
-        });
+        setMarkerList(prevMarkerList => ({...prevMarkerList, [streamId]: newMarkers}));
     }
 
     function startStream() {
-        webSocketClient.setup(handleMessage, streams);
-        webSocketClient.connect();
+        wsClient.current.connect();
     }
 
     function stopStream() {
-        webSocketClient.disconnect();
+        wsClient.current.disconnect();
     }
 
     return (
         <>
             <Stack direction="column" spacing={2}>
                 <div>
-                    <h1>{t('map.title')}</h1>
+                    <h1>{t('trajectory.title')}</h1>
                 </div>
                 <Card>
-                <Stack direction="row" spacing={2}>
-                    <div>
-                        <IconButton onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton>
-                    </div>
-                    <div>
-                        <IconButton onClick={stopStream}><StopCircleIcon /></IconButton>
-                    </div>
-                </Stack>
+                    <Stack direction="row" spacing={2}>
+                        <div>
+                            <IconButton onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton>
+                        </div>
+                        <div>
+                            <IconButton onClick={stopStream}><StopCircleIcon /></IconButton>
+                        </div>
+                    </Stack>
                 </Card>
                 <Box sx={{
                     border: 1,
@@ -143,16 +127,18 @@ function TrajectoryMap() {
                     m: 5,
                     position: 'relative'
                 }}>
-                    <DeckGL
-                        layers={layers}               // Add map layers
-                        views={MAP_VIEW}              // Add map view settings
-                        initialViewState={INITIAL_VIEW_STATE}  // Set initial position
-                        controller={{ dragRotate: false }}       // Disable rotation
-                    />
+                    {showMap ? (
+                        <LiveMapView
+                            streams={streams}
+                            markerList={markerList}
+                        />
+                    ) : (
+                        <></>
+                    )}
                 </Box>
             </Stack>
         </>
-    );
+    )
 }
 
 export default TrajectoryMap;

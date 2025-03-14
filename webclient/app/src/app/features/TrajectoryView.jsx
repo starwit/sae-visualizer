@@ -2,8 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
-import LiveMapView from "./LiveMapView";
-import { Box, Card, IconButton, Stack } from "@mui/material";
+import { Box, Card, IconButton, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 
@@ -44,6 +43,7 @@ function TrajectoryView() {
         });
         setMarkerList(prevMarkerList => ({...prevMarkerList, [streamId]: newMarkers}));
     }
+    
     function startStream() {
         wsClient.current.connect();
     }
@@ -76,10 +76,7 @@ function TrajectoryView() {
                     position: 'relative'
                 }}>
                     {showMap ? (
-                        <LiveMapView
-                            streams={streams}
-                            markerList={markerList}
-                        />
+                        <Typography>TODO</Typography>
                     ) : (
                         <></>
                     )}
