@@ -75,5 +75,4 @@ public class ReceiverConfiguration {
             container.start();
         };
     }
-
 }
