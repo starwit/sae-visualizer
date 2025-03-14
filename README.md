@@ -35,6 +35,17 @@ Run application locally with:
 
 You can then access application under: http://localhost:8080/sae-visualizer
 
+### Configuration
+
+Application is configured via file [application.properties](application/src/main/resources/application.properties). If you create this file in root folder and run app from there, this will override packaged application.properties.
+
+The following configuration will be used to connect to a running Valkey/Redis instance.
+```properties
+spring.redis.host=localhost
+spring.redis.port=6379
+#spring.redis.password=yourpassword
+spring.redis.streamIds=stream1,stream2
+```
 ### Authentication
 
 This application can be protected by an external authentication with Keycloak. In order to use authentication, you need a properly configured Keycloak instance and the following parameters:

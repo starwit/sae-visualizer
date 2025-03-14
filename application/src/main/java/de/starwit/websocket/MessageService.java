@@ -17,6 +17,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import de.starwit.visionapi.Sae.BoundingBox;
 import de.starwit.visionapi.Sae.Detection;
 import de.starwit.visionapi.Sae.SaeMessage;
+import de.starwit.visionapi.Sae.VideoFrame;
+
 import java.util.ArrayList;
 
 @Service
@@ -44,6 +46,8 @@ public class MessageService {
     private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
         
         List<TrajectoryDto> trackedObjects = new ArrayList<>();
+
+        VideoFrame f = saeMessage.getFrame();
 
         for (Detection detection : saeMessage.getDetectionsList()) {
             var t = new TrajectoryDto();
