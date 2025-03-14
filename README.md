@@ -34,3 +34,17 @@ Run application locally with:
 ```
 
 You can then access application under: http://localhost:8080/sae-visualizer
+
+### Authentication
+
+This application can be protected by an external authentication with Keycloak. In order to use authentication, you need a properly configured Keycloak instance and the following parameters:
+
+```properties
+#spring.profiles.active=dev # activate for no auth
+
+# Authentication
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://auth.markus-workstation-starwit/realms/aicockpit
+spring.security.oauth2.client.registration.keycloak.client-id=aicockpit
+spring.security.oauth2.client.registration.keycloak.client-secret=aicockpit
+spring.security.oauth2.client.registration.keycloak.scope=openid
+```
