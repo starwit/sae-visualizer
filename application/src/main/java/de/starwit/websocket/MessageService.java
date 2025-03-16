@@ -74,8 +74,9 @@ public class MessageService {
 
     private TrajectoryDto setNormalizedImageCoordinates(TrajectoryDto t, BoundingBox bb) {
         // compute center of bounding box
-        float x = ((bb.getMinX() - bb.getMaxX()) / 2) * t.getShape().getWidth();
-        float y = ((bb.getMinY() - bb.getMaxY()) / 2) * t.getShape().getHeight();
+        float x = ((bb.getMinX() + bb.getMaxX()) / 2) * t.getShape().getWidth();
+        float y = ((bb.getMinY() + bb.getMaxY()) / 2) * t.getShape().getHeight();
+        //log.info("bb: " + bb.getMaxX() + ", " + bb.getMinX() + "; " + x + "," + y);
         t.getCoordinates().setX(x);
         t.getCoordinates().setY(y);
         return t;
