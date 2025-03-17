@@ -86,8 +86,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-
-
     // Taken from
     // https://stackoverflow.com/questions/74939220/classnotfoundexception-org-springframework-security-oauth2-server-resource-web
     @Component
