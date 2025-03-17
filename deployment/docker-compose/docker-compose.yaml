@@ -1,0 +1,14 @@
+name: sae-visualizer
+
+services: 
+  sae-visualizer:
+    image: starwitorg/sae-visualizer:0.0.2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_REDIS_HOST: 192.168.100.77
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_STREAMIDS: meckauer:north,meckauer:south,meckauer:east,meckauer:west      
+    ports:
+      - 8080:8080
+    expose:
+      - "8080"
