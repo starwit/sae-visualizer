@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
-import { Box, Card, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import DeckGL from "@deck.gl/react";
@@ -22,6 +22,7 @@ function TrajectoryView() {
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
     const [objectTracker] = useState(() => new ObjectTracker(500));
+    const [started, setStarted] = useState(false);
 
     const [viewState, setViewState] = useState({
         target: [0, 0, 0],
@@ -95,10 +96,12 @@ function TrajectoryView() {
         selectedStreams.push(streamSelect);
         wsClient.current.setup(handleMessage, selectedStreams);
         wsClient.current.connect();
+        setStarted(true);
     }
 
     function stopStream() {
         wsClient.current.disconnect();
+        setStarted(false);
     }
 
     const handleStreamSelectChange = (event) => {
@@ -224,19 +227,27 @@ function TrajectoryView() {
 
     return (
         <>
-            <Stack direction="column" spacing={2}>
-                <div>
-                    <h1>{t('trajectory.title')}</h1>
-                </div>
-                <Card>
+            <DeckGL
+                views={new OrthographicView({
+                    id: 'ortho',
+                    flipY: true // Y increases from top to bottom in image space
+                })}
+                viewState={viewState}
+                controller={false}
+                onViewStateChange={onViewStateChange}
+                layers={[backgroundLayer, ...layers]}
+                getCursor={({ isDragging }) => isDragging ? 'grabbing' : 'default'}
+                className="deckgl-container"
+            />
+            <Box sx={{
+                position: 'fixed',
+                top: 60,
+                left: 10,
+                width: '100%'
+            }}>
+                <Stack direction="row" spacing={5} width="fullWidth">
                     <Stack direction="row" spacing={2}>
-                        <div>
-                            <IconButton onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton>
-                        </div>
-                        <div>
-                            <IconButton onClick={stopStream}><StopCircleIcon /></IconButton>
-                        </div>
-                        <FormControl fullWidth>
+                        <FormControl sx={{width: 350}}>
                             <InputLabel id="stream-select">Stream</InputLabel>
                             <Select
                                 labelId="stream-select"
@@ -253,29 +264,16 @@ function TrajectoryView() {
 
                             </Select>
                         </FormControl>
+                        {!started ?
+                            <IconButton size="large" color="primary" onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton> :
+                            <IconButton size="large" color="error" onClick={stopStream}><StopCircleIcon /></IconButton>}
+
                     </Stack>
-                </Card>
-                <Box sx={{
-                    border: 1,
-                    height: 850,
-                    width: "auto",
-                    m: 5,
-                    position: 'relative'
-                }}>
-                    <DeckGL
-                        views={new OrthographicView({
-                            id: 'ortho',
-                            flipY: true // Y increases from top to bottom in image space
-                        })}
-                        viewState={viewState}
-                        controller={false}
-                        onViewStateChange={onViewStateChange}
-                        layers={[backgroundLayer, ...layers]}
-                        getCursor={({ isDragging }) => isDragging ? 'grabbing' : 'default'}
-                        className="deckgl-container"
-                    />
-                </Box>
-            </Stack>
+                    <Typography variant="h1">
+                        {t('trajectory.title')}
+                    </Typography>
+                </Stack>
+            </Box>
         </>
     )
 }
