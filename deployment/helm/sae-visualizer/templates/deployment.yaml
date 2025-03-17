@@ -31,11 +31,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: SPRING_REDIS_HOST
-              value: {{ .Values.config.valkey.host }}
+              value: {{ .Values.config.valkey.host | quote }}
             - name: SPRING_REDIS_PORT
-              value: {{ .Values.config.valkey.port }}
+              value: {{ .Values.config.valkey.port  | quote }}
             - name: SPRING_REDIS_STREAMIDS
-              value: {{ join ", " .Values.config.valkey.stream_ids }}
+              value: {{ join "," .Values.config.valkey.stream_ids | quote }}
             {{- if .Values.auth.enabled }}
             - name: SPRING_PROFILES_ACTIVE
               value: auth
