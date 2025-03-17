@@ -17,7 +17,7 @@
 	<packaging>pom</packaging>
 
 	<scm>
-		<connection>scm:git:https://github.com/starwit/alert-viewer.git</connection>
+		<connection>scm:git:https://github.com/starwit/sae-visualizer.git</connection>
 		<tag>0.0.1</tag>
 	</scm>
 
