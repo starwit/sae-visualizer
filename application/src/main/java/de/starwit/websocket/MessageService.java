@@ -17,8 +17,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import de.starwit.visionapi.Sae.BoundingBox;
 import de.starwit.visionapi.Sae.Detection;
 import de.starwit.visionapi.Sae.SaeMessage;
-import de.starwit.visionapi.Sae.Shape;
-import de.starwit.visionapi.Sae.VideoFrame;
 
 import java.util.ArrayList;
 

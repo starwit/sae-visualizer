@@ -45,58 +45,60 @@ function TrajectoryView() {
 
     useEffect(() => {
         const updateDimensions = () => {
-          if (containerRef.current && shape) {
-            const containerWidth = window.innerWidth;
-            const containerHeight = window.innerHeight;
-            
-            const { width: frameWidth, height: frameHeight } = shape;
-            setDimensions({ width: frameWidth, height: frameHeight });
-            
-            // Calculate zoom level to fit view
-            const { width: viewWidth, height: viewHeight } = calculateViewportDimensions(
-              containerWidth, 
-              containerHeight, 
-              frameWidth, 
-              frameHeight
-            );
-            
-            // Calculate zoom to fit the frame dimensions to the viewport
-            const scale = Math.min(
-              viewWidth / frameWidth,
-              viewHeight / frameHeight
-            );
-            
-            const zoom = Math.log2(scale);
-            
-            setViewState({
-              target: [frameWidth / 2, frameHeight / 2, 0],
-              zoom,
-              minZoom: -5,
-              maxZoom: 10
-            });
-          }
+            if (containerRef.current && shape) {
+                const containerWidth = window.innerWidth;
+                const containerHeight = window.innerHeight;
+
+                const { width: frameWidth, height: frameHeight } = shape;
+                setDimensions({ width: frameWidth, height: frameHeight });
+
+                // Calculate zoom level to fit view
+                const { width: viewWidth, height: viewHeight } = calculateViewportDimensions(
+                    containerWidth,
+                    containerHeight,
+                    frameWidth,
+                    frameHeight
+                );
+
+                // Calculate zoom to fit the frame dimensions to the viewport
+                const scale = Math.min(
+                    viewWidth / frameWidth,
+                    viewHeight / frameHeight
+                );
+
+                const zoom = Math.log2(scale);
+
+                setViewState({
+                    target: [frameWidth / 2, frameHeight / 2, 0],
+                    zoom,
+                    minZoom: -5,
+                    maxZoom: 10
+                });
+            }
         };
-        
+
         updateDimensions();
         window.addEventListener('resize', updateDimensions);
         return () => window.removeEventListener('resize', updateDimensions);
-      }, [shape]);    
+    }, [shape]);
 
-    function handleMessage(trackedObjectList, streamId) {
-      if(trackedObjectList.length > 0) {
-        setShape(trackedObjectList[0].shape);
-        const updatedTrajectories = objectTracker.updateTrajectories(trackedObjectList);
-        setTrajectories(updatedTrajectories);        
-      }
+    function handleMessage(trackedObjectList) {
+        if (trackedObjectList.length > 0) {
+            setShape(trackedObjectList[0].shape);
+            const updatedTrajectories = objectTracker.updateTrajectories(trackedObjectList, trackedObjectList[0].receiveTimestamp);
+            setTrajectories(updatedTrajectories);
+        }
     }
 
     function startStream() {
-      wsClient.current.setup(handleMessage, streams);
-      wsClient.current.connect();
+        let selectedStreams = [];
+        selectedStreams.push(streamSelect);
+        wsClient.current.setup(handleMessage, selectedStreams);
+        wsClient.current.connect();
     }
 
     function stopStream() {
-      wsClient.current.disconnect();
+        wsClient.current.disconnect();
     }
 
     const handleStreamSelectChange = (event) => {
@@ -105,7 +107,7 @@ function TrajectoryView() {
 
     const onViewStateChange = ({ viewState: newViewState }) => {
         setViewState(newViewState);
-    };    
+    };
 
     // Function to calculate the viewport dimensions that maintain aspect ratio
     const calculateViewportDimensions = (containerWidth, containerHeight, frameWidth, frameHeight) => {
@@ -150,75 +152,75 @@ function TrajectoryView() {
         // First, separate active and passive trajectories
         const activeTrajectories = trajectories.filter(t => t.isActive);
         const passiveTrajectories = trajectories.filter(t => !t.isActive);
-        
+
         // Add paths for passive trajectories (render these first, so they appear below active ones)
         if (passiveTrajectories.length > 0) {
-          layers.push(
-            new PathLayer({
-              id: 'passive-trajectory-paths',
-              data: passiveTrajectories,
-              getPath: d => d.path,
-              getColor: d => d.color,
-              getWidth: 1.5, // Slightly thinner than active trajectories
-              widthUnits: 'pixels',
-              pickable: true,
-              jointRounded: true,
-              capRounded: true,
-              billboard: false,
-              miterLimit: 2
-            })
-          );
+            layers.push(
+                new PathLayer({
+                    id: 'passive-trajectory-paths',
+                    data: passiveTrajectories,
+                    getPath: d => d.path,
+                    getColor: d => d.color,
+                    getWidth: 1.5, // Slightly thinner than active trajectories
+                    widthUnits: 'pixels',
+                    pickable: true,
+                    jointRounded: true,
+                    capRounded: true,
+                    billboard: false,
+                    miterLimit: 2
+                })
+            );
         }
-        
+
         // Add paths for active trajectories
         if (activeTrajectories.length > 0) {
-          layers.push(
-            new PathLayer({
-              id: 'active-trajectory-paths',
-              data: activeTrajectories,
-              getPath: d => d.path,
-              getColor: d => d.color,
-              getWidth: 2, 
-              widthUnits: 'pixels',
-              pickable: true,
-              jointRounded: true,
-              capRounded: true,
-              billboard: false,
-              miterLimit: 2,
-              onHover: info => {
-                if (info.object) {
-                  console.log('Trajectory ID:', info.object.id);
-                }
-              }
-            })
-          );
-          
-          // Add points for the current positions (only for active trajectories)
-          layers.push(
-            new ScatterplotLayer({
-              id: 'current-positions',
-              data: activeTrajectories.map(t => ({ 
-                position: t.path[t.path.length - 1], 
-                color: t.color,
-                id: t.id
-              })),
-              getPosition: d => d.position,
-              getColor: [255, 255, 255], // White outline for all markers
-              getFillColor: d => d.color,
-              getRadius: 5,
-              radiusUnits: 'pixels',
-              stroked: true,
-              lineWidthMinPixels: 1,
-              pickable: true,
-              onHover: info => {
-                if (info.object) {
-                  console.log('Object ID:', info.object.id);
-                }
-              }
-            })
-          );
+            layers.push(
+                new PathLayer({
+                    id: 'active-trajectory-paths',
+                    data: activeTrajectories,
+                    getPath: d => d.path,
+                    getColor: d => d.color,
+                    getWidth: 2,
+                    widthUnits: 'pixels',
+                    pickable: true,
+                    jointRounded: true,
+                    capRounded: true,
+                    billboard: false,
+                    miterLimit: 2,
+                    onHover: info => {
+                        if (info.object) {
+                            console.log('Trajectory ID:', info.object.id);
+                        }
+                    }
+                })
+            );
+
+            // Add points for the current positions (only for active trajectories)
+            layers.push(
+                new ScatterplotLayer({
+                    id: 'current-positions',
+                    data: activeTrajectories.map(t => ({
+                        position: t.path[t.path.length - 1],
+                        color: t.color,
+                        id: t.id
+                    })),
+                    getPosition: d => d.position,
+                    getColor: [255, 255, 255], // White outline for all markers
+                    getFillColor: d => d.color,
+                    getRadius: 5,
+                    radiusUnits: 'pixels',
+                    stroked: true,
+                    lineWidthMinPixels: 1,
+                    pickable: true,
+                    onHover: info => {
+                        if (info.object) {
+                            info.object.hexId;
+                        }
+                    }
+                })
+            );
         }
-      }
+    }
 
     return (
         <>

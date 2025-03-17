@@ -36,16 +36,13 @@ class ObjectTracker {
         const { objectId } = detection;
         const hexId = ObjectTracker.objectIdToHex(objectId);
         
-        // Calculate center point of the bounding box
-        const centerX = detection.coordinates.x;
-        const centerY = detection.coordinates.y;
-        
         // Create a new point
         const point = {
-          x: centerX,
-          y: centerY,
+          x: detection.coordinates.x,
+          y: detection.coordinates.y,
           timestamp: currentTime,
           objectClass: detection.classId,
+          objectId: hexId,
           confidence: detection.confidence
         };
         
