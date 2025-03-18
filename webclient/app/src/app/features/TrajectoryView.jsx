@@ -41,6 +41,9 @@ function TrajectoryView() {
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
+            if (response.data && response.data.length > 0) {
+                setStreamSelect(response.data[0]);
+            }            
         });
     }, []);
 
@@ -136,12 +139,6 @@ function TrajectoryView() {
 
     const backgroundLayer = new ScatterplotLayer({
         id: 'background',
-        data: [
-            { position: [0, 0], radius: 1 },
-            { position: [dimensions.width, 0], radius: 1 },
-            { position: [dimensions.width, dimensions.height], radius: 1 },
-            { position: [0, dimensions.height], radius: 1 }
-        ],
         getPosition: d => d.position,
         getRadius: 1,
         getFillColor: [0, 0, 0, 0], // Transparent
@@ -242,36 +239,40 @@ function TrajectoryView() {
             <Box sx={{
                 position: 'fixed',
                 top: 60,
+                right: 10
+            }}>
+                <Typography variant="h1">
+                    {t('trajectory.title')}
+                </Typography>
+            </Box>
+            <Box sx={{
+                position: 'fixed',
+                top: 60,
                 left: 10,
                 width: '100%'
             }}>
-                <Stack direction="row" spacing={5} width="fullWidth">
-                    <Stack direction="row" spacing={2}>
-                        <FormControl sx={{width: 350}}>
-                            <InputLabel id="stream-select">Stream</InputLabel>
-                            <Select
-                                labelId="stream-select"
-                                id="stream-select-id"
-                                value={streamSelect}
-                                label="Stream"
-                                onChange={handleStreamSelectChange}
-                            >
-                                {streams.map((stream) => (
-                                    <MenuItem key={stream} value={stream}>
-                                        {stream}
-                                    </MenuItem>
-                                ))}
-
-                            </Select>
-                        </FormControl>
+                <Stack direction="row">
+                    <FormControl sx={{ width: 350 }}>
+                        <InputLabel id="stream-select">Stream</InputLabel>
+                        <Select
+                            labelId="stream-select"
+                            id="stream-select-id"
+                            value={streamSelect}
+                            label="Stream"
+                            onChange={handleStreamSelectChange}
+                        >
+                            {streams.map((stream) => (
+                                <MenuItem key={stream} value={stream}>
+                                    {stream}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <Fab color="primary">
                         {!started ?
-                            <IconButton size="large" color="primary" onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton> :
-                            <IconButton size="large" color="error" onClick={stopStream}><StopCircleIcon /></IconButton>}
-
-                    </Stack>
-                    <Typography variant="h1">
-                        {t('trajectory.title')}
-                    </Typography>
+                            <PlayCircleFilledWhiteIcon onClick={startStream} /> :
+                            <StopCircleIcon onClick={stopStream} />}
+                    </Fab>
                 </Stack>
             </Box>
         </>

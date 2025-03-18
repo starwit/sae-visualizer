@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
 import LiveMapView from "./LiveMapView";
-import { Box, Card, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Card, Fab, IconButton, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import ColorFunctions from "../services/ColorFunctions";
@@ -77,17 +77,22 @@ function TrajectoryMap() {
             <Box sx={{
                 position: 'fixed',
                 top: 60,
-                left: 10,
-                width: '100%'
+                right: 10
             }}>
-                <Stack direction="row" spacing={5} width="fullWidth">
+                <Typography variant="h1">
+                    {t('map.title')}
+                </Typography>
+            </Box>
+            <Box sx={{
+                position: 'fixed',
+                bottom: 60,
+                right: 10
+            }}>
+                <Fab color="primary">
                     {!started ?
-                        <IconButton size="large" color="primary" onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton> :
-                        <IconButton size="large" color="error" onClick={stopStream}><StopCircleIcon /></IconButton>}
-                    <Typography variant="h1">
-                        {t('map.title')}
-                    </Typography>                        
-                </Stack>
+                        <PlayCircleFilledWhiteIcon onClick={startStream} /> :
+                        <StopCircleIcon onClick={stopStream} />}
+                </Fab>
             </Box>
         </>
     )
