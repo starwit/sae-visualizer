@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
-import { Box, Card, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import DeckGL from "@deck.gl/react";
@@ -22,6 +22,7 @@ function TrajectoryView() {
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
     const [objectTracker] = useState(() => new ObjectTracker(500));
+    const [started, setStarted] = useState(false);
 
     const [viewState, setViewState] = useState({
         target: [0, 0, 0],
@@ -40,6 +41,9 @@ function TrajectoryView() {
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
+            if (response.data && response.data.length > 0) {
+                setStreamSelect(response.data[0]);
+            }            
         });
     }, []);
 
@@ -95,10 +99,12 @@ function TrajectoryView() {
         selectedStreams.push(streamSelect);
         wsClient.current.setup(handleMessage, selectedStreams);
         wsClient.current.connect();
+        setStarted(true);
     }
 
     function stopStream() {
         wsClient.current.disconnect();
+        setStarted(false);
     }
 
     const handleStreamSelectChange = (event) => {
@@ -133,12 +139,6 @@ function TrajectoryView() {
 
     const backgroundLayer = new ScatterplotLayer({
         id: 'background',
-        data: [
-            { position: [0, 0], radius: 1 },
-            { position: [dimensions.width, 0], radius: 1 },
-            { position: [dimensions.width, dimensions.height], radius: 1 },
-            { position: [0, dimensions.height], radius: 1 }
-        ],
         getPosition: d => d.position,
         getRadius: 1,
         getFillColor: [0, 0, 0, 0], // Transparent
@@ -224,58 +224,57 @@ function TrajectoryView() {
 
     return (
         <>
-            <Stack direction="column" spacing={2}>
-                <div>
-                    <h1>{t('trajectory.title')}</h1>
-                </div>
-                <Card>
-                    <Stack direction="row" spacing={2}>
-                        <div>
-                            <IconButton onClick={startStream}><PlayCircleFilledWhiteIcon /></IconButton>
-                        </div>
-                        <div>
-                            <IconButton onClick={stopStream}><StopCircleIcon /></IconButton>
-                        </div>
-                        <FormControl fullWidth>
-                            <InputLabel id="stream-select">Stream</InputLabel>
-                            <Select
-                                labelId="stream-select"
-                                id="stream-select-id"
-                                value={streamSelect}
-                                label="Stream"
-                                onChange={handleStreamSelectChange}
-                            >
-                                {streams.map((stream) => (
-                                    <MenuItem key={stream} value={stream}>
-                                        {stream}
-                                    </MenuItem>
-                                ))}
-
-                            </Select>
-                        </FormControl>
-                    </Stack>
-                </Card>
-                <Box sx={{
-                    border: 1,
-                    height: 850,
-                    width: "auto",
-                    m: 5,
-                    position: 'relative'
-                }}>
-                    <DeckGL
-                        views={new OrthographicView({
-                            id: 'ortho',
-                            flipY: true // Y increases from top to bottom in image space
-                        })}
-                        viewState={viewState}
-                        controller={false}
-                        onViewStateChange={onViewStateChange}
-                        layers={[backgroundLayer, ...layers]}
-                        getCursor={({ isDragging }) => isDragging ? 'grabbing' : 'default'}
-                        className="deckgl-container"
-                    />
-                </Box>
-            </Stack>
+            <DeckGL
+                views={new OrthographicView({
+                    id: 'ortho',
+                    flipY: true // Y increases from top to bottom in image space
+                })}
+                viewState={viewState}
+                controller={false}
+                onViewStateChange={onViewStateChange}
+                layers={[backgroundLayer, ...layers]}
+                getCursor={({ isDragging }) => isDragging ? 'grabbing' : 'default'}
+                className="deckgl-container"
+            />
+            <Box sx={{
+                position: 'fixed',
+                top: 60,
+                right: 10
+            }}>
+                <Typography variant="h1">
+                    {t('trajectory.title')}
+                </Typography>
+            </Box>
+            <Box sx={{
+                position: 'fixed',
+                top: 60,
+                left: 10,
+                width: '100%'
+            }}>
+                <Stack direction="row">
+                    <FormControl sx={{ width: 350 }}>
+                        <InputLabel id="stream-select">Stream</InputLabel>
+                        <Select
+                            labelId="stream-select"
+                            id="stream-select-id"
+                            value={streamSelect}
+                            label="Stream"
+                            onChange={handleStreamSelectChange}
+                        >
+                            {streams.map((stream) => (
+                                <MenuItem key={stream} value={stream}>
+                                    {stream}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <Fab color="primary">
+                        {!started ?
+                            <PlayCircleFilledWhiteIcon onClick={startStream} /> :
+                            <StopCircleIcon onClick={stopStream} />}
+                    </Fab>
+                </Stack>
+            </Box>
         </>
     )
 }
