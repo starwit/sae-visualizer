@@ -54,11 +54,9 @@ public class MessageService {
             t.setReceiveTimestamp(LocalDateTime.now());
             t.setStreamId(streamId);
             t.setShape(saeMessage.getFrame().getShape().getWidth(), saeMessage.getFrame().getShape().getHeight());
-            if (detection.getGeoCoordinate().getLatitude() == 0.0 && detection.getGeoCoordinate().getLongitude() == 0.0) {
-                // Let's hope we never detect objects at geo coordinates 0,0
-                t.setHasGeoCoordinates(false);
-                t = setNormalizedImageCoordinates(t, detection.getBoundingBox());
-            } else {
+            t.setHasGeoCoordinates(false);
+            t = setNormalizedImageCoordinates(t, detection.getBoundingBox());
+            if (detection.hasGeoCoordinate()) {
                 t.setHasGeoCoordinates(true);
                 t.getCoordinates().setLatitude(detection.getGeoCoordinate().getLatitude());
                 t.getCoordinates().setLongitude(detection.getGeoCoordinate().getLongitude());                
