@@ -62,7 +62,10 @@ spec:
             {{- else }}
             - name: SPRING_PROFILES_ACTIVE
               value: default
-            {{- end }}                          
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- tpl . $ | nindent 12 }}
+            {{- end }}                         
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
