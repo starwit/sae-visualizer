@@ -16,13 +16,12 @@ function TrajectoryView() {
     const wsClient = useRef(new WebSocketClient());
 
     const [streams, setStreams] = useState([]);
-    const [streamSelect, setStreamSelect] = useState("");
+    const [selectedStream, setSelectedStream] = useState("");
 
-    const containerRef = useRef(null);
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
-    const [objectTracker] = useState(() => new ObjectTracker(500));
-    const [started, setStarted] = useState(false);
+    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500));
+    const [running, setRunning] = useState(false);
 
     const [viewState, setViewState] = useState({
         target: [0, 0, 0],
@@ -31,30 +30,24 @@ function TrajectoryView() {
         maxZoom: 10
     });
 
-    const [dimensions, setDimensions] = useState({
-        width: 1000,  // Default initial values
-        height: 1000
-    });
-
     const layers = [];
 
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
             if (response.data && response.data.length > 0) {
-                setStreamSelect(response.data[0]);
+                setSelectedStream(response.data[0]);
             }            
         });
     }, []);
 
     useEffect(() => {
         const updateDimensions = () => {
-            if (containerRef.current && shape) {
+            if (shape) {
                 const containerWidth = window.innerWidth;
                 const containerHeight = window.innerHeight;
 
                 const { width: frameWidth, height: frameHeight } = shape;
-                setDimensions({ width: frameWidth, height: frameHeight });
 
                 // Calculate zoom level to fit view
                 const { width: viewWidth, height: viewHeight } = calculateViewportDimensions(
@@ -86,33 +79,46 @@ function TrajectoryView() {
         return () => window.removeEventListener('resize', updateDimensions);
     }, [shape]);
 
+    // Reset tracked objects when stream is changed
+    useEffect(() => {
+        stopStream();
+        setObjectTracker(new ObjectTracker(500));
+        setTrajectories([]);
+    }, [selectedStream]);
+
     function handleMessage(trackedObjectList) {
         if (trackedObjectList.length > 0) {
-            setShape(trackedObjectList[0].shape);
+            updateShape(trackedObjectList);
             const updatedTrajectories = objectTracker.updateTrajectories(trackedObjectList, trackedObjectList[0].receiveTimestamp);
             setTrajectories(updatedTrajectories);
         }
     }
+    
+    function updateShape(trackedObjectList) {
+        const newShape = trackedObjectList[0].shape;
+        setShape(oldShape => {
+            if (oldShape.width == newShape.width && oldShape.height == newShape.height) {
+                return oldShape;
+            }
+            return newShape;                
+        });
+    }
 
     function startStream() {
         let selectedStreams = [];
-        selectedStreams.push(streamSelect);
+        selectedStreams.push(selectedStream);
         wsClient.current.setup(handleMessage, selectedStreams);
         wsClient.current.connect();
-        setStarted(true);
+        setRunning(true);
     }
 
     function stopStream() {
         wsClient.current.disconnect();
-        setStarted(false);
+        setRunning(false);
     }
 
     const handleStreamSelectChange = (event) => {
-        setStreamSelect(event.target.value);
-    };
-
-    const onViewStateChange = ({ viewState: newViewState }) => {
-        setViewState(newViewState);
+        setSelectedStream(event.target.value);
     };
 
     // Function to calculate the viewport dimensions that maintain aspect ratio
@@ -163,7 +169,6 @@ function TrajectoryView() {
                     getColor: d => d.color,
                     getWidth: 1.5, // Slightly thinner than active trajectories
                     widthUnits: 'pixels',
-                    pickable: true,
                     jointRounded: true,
                     capRounded: true,
                     billboard: false,
@@ -182,16 +187,10 @@ function TrajectoryView() {
                     getColor: d => d.color,
                     getWidth: 2,
                     widthUnits: 'pixels',
-                    pickable: true,
                     jointRounded: true,
                     capRounded: true,
                     billboard: false,
                     miterLimit: 2,
-                    onHover: info => {
-                        if (info.object) {
-                            console.log('Trajectory ID:', info.object.id);
-                        }
-                    }
                 })
             );
 
@@ -205,18 +204,12 @@ function TrajectoryView() {
                         id: t.id
                     })),
                     getPosition: d => d.position,
-                    getColor: [255, 255, 255], // White outline for all markers
+                    getLineColor: [255, 255, 255], // White outline for all markers
                     getFillColor: d => d.color,
                     getRadius: 5,
                     radiusUnits: 'pixels',
                     stroked: true,
                     lineWidthMinPixels: 1,
-                    pickable: true,
-                    onHover: info => {
-                        if (info.object) {
-                            info.object.hexId;
-                        }
-                    }
                 })
             );
         }
@@ -224,18 +217,19 @@ function TrajectoryView() {
 
     return (
         <>
-            <DeckGL
-                views={new OrthographicView({
-                    id: 'ortho',
-                    flipY: true // Y increases from top to bottom in image space
-                })}
-                viewState={viewState}
-                controller={false}
-                onViewStateChange={onViewStateChange}
-                layers={[backgroundLayer, ...layers]}
-                getCursor={({ isDragging }) => isDragging ? 'grabbing' : 'default'}
-                className="deckgl-container"
-            />
+            {trajectories.length > 0 && (
+                <DeckGL
+                    views={new OrthographicView({
+                        id: 'ortho',
+                        flipY: true // Y increases from top to bottom in image space
+                    })}
+                    viewState={viewState}
+                    controller={false}
+                    layers={[backgroundLayer, ...layers]}
+                    getCursor={() => 'default'}
+                    _pickable={false}
+                />
+            )}
             <Box sx={{
                 position: 'fixed',
                 top: 60,
@@ -257,7 +251,7 @@ function TrajectoryView() {
                         <Select
                             labelId="stream-select"
                             id="stream-select-id"
-                            value={streamSelect}
+                            value={selectedStream}
                             label="Stream"
                             onChange={handleStreamSelectChange}
                         >
@@ -269,7 +263,7 @@ function TrajectoryView() {
                         </Select>
                     </FormControl>
                     <Fab color="primary">
-                        {!started ?
+                        {!running ?
                             <PlayCircleFilledWhiteIcon onClick={startStream} /> :
                             <StopCircleIcon onClick={stopStream} />}
                     </Fab>
