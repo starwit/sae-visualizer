@@ -82,7 +82,6 @@ function TrajectoryView() {
     // Reset tracked objects when stream is changed
     useEffect(() => {
         stopStream();
-        setObjectTracker(new ObjectTracker(500));
         setTrajectories([]);
     }, [selectedStream]);
 
@@ -104,11 +103,20 @@ function TrajectoryView() {
         });
     }
 
+    function toggleStream() {
+        if (running) {
+            stopStream();
+        } else {
+            startStream();
+        }
+    }
+
     function startStream() {
         let selectedStreams = [];
         selectedStreams.push(selectedStream);
         wsClient.current.setup(handleMessage, selectedStreams);
         wsClient.current.connect();
+        setObjectTracker(new ObjectTracker(500));
         setRunning(true);
     }
 
@@ -262,10 +270,13 @@ function TrajectoryView() {
                             ))}
                         </Select>
                     </FormControl>
-                    <Fab color="primary">
+                    <Fab 
+                        color="primary"
+                        onClick={toggleStream}
+                    >
                         {!running ?
-                            <PlayCircleFilledWhiteIcon onClick={startStream} /> :
-                            <StopCircleIcon onClick={stopStream} />}
+                            <PlayCircleFilledWhiteIcon/> :
+                            <StopCircleIcon/>}
                     </Fab>
                 </Stack>
             </Box>
