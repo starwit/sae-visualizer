@@ -8,10 +8,7 @@ This application needs a connection to ValKey/Redis bus of a running SAE instanc
 Once started application provides various views on processed data. 
 
 ## How to deploy
-
-TODO
-* Docker compose
-* Helm Chart
+Application is deployed using Kubernetes with Helm. See [deployment guide](Deployment.md) for more details. If you want to run application locally you can also use [Docker compose script](deployment/docker-compose/docker-compose.yaml). Please note, that this is not intended to be used in productive scenarios.
 
 ## Development Documentation 
 In order to build application, two steps are necessary. First package Javascript frontend like so:
