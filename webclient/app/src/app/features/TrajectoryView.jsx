@@ -161,7 +161,8 @@ function TrajectoryView() {
     // Get passive color based on age
     function getColorForAge(createdAt) {
         const age = new Date().getTime() - createdAt;
-        const alpha = Math.max(0, 255 - 255 * (age / MAX_PASSIVE_TRAJECTORIES_AGE)); // Fade out over time
+        const alphaFactor = Math.pow(1 - (age / MAX_PASSIVE_TRAJECTORIES_AGE), 3); // Non-linear fade out
+        const alpha = Math.max(0, 255 * alphaFactor); 
         return [...PASSIVE_PATH_COLOR.slice(0, 3), alpha];
     };
 
