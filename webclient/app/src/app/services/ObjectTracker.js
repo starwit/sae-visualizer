@@ -1,12 +1,12 @@
 class ObjectTracker {
-    constructor(maxTrajectoryPoints = 500) {
-      this.trajectories = new Map(); // Map of objectId -> array of points (active trajectories)
-      this.passiveTrajectories = []; // Array of passive trajectory paths
-      this.maxTrajectoryPoints = maxTrajectoryPoints;
-      this.maxPassiveTrajectories = 500; // Keep 500 passive trajectories
-      this.activeTTL = 2000; // Time to live in milliseconds before becoming passive (2 seconds)
-      this.stationaryTimeout = 5000; // Time before considering a stationary object inactive
-      this.stationaryThreshold = 0.5; // Threshold for considering an object stationary (factor of bounding box diagonal)
+    constructor(maxTrajectoryPoints = 500, maxPassiveTrajectories = 500) {
+      this.trajectories = new Map(); // Map of objectId to {points: [], stationary: boolean}
+      this.passiveTrajectories = [];
+      this.maxTrajectoryPoints = maxTrajectoryPoints; // Maximum number of points to keep in a trajectory
+      this.maxPassiveTrajectories = maxPassiveTrajectories; // Maximum number of passive trajectories to keep
+      this.activeTTL = 1000; // Time to live in milliseconds before becoming passive
+      this.stationaryWindow = 10000; // Time window in milliseconds to consider an object stationary
+      this.stationaryThreshold = 0.05; // Threshold for considering an object stationary (factor of bounding box diagonal)
     }
     
     // Process new detections and update trajectories
@@ -61,47 +61,47 @@ class ObjectTracker {
       const isNowStationary = this.isObjectStationary(points);
 
       if (isNowStationary && !stationaryBefore) {
-        console.log("Object is NOW stationary", objectId);
         this.addPassiveTrajectory(trajectory);
         this.truncateTrajectoryToStationaryWindow(trajectory, currentTime);
         trajectory.stationary = true;
       } else if (isNowStationary && stationaryBefore) {
-        console.log("Object is STILL stationary", objectId);
         this.truncateTrajectoryToStationaryWindow(trajectory, currentTime);
       } else if (!isNowStationary && stationaryBefore) {
-        console.log("Object is NO LONGER stationary", objectId);
         trajectory.stationary = false;
       }
     }
 
     isObjectStationary(points) {
       // Check if we have enough data for a meaningful calculation
-      if (points[points.length-1].timestamp - points[0].timestamp < this.stationaryTimeout) {
+      if (points[points.length-1].timestamp - points[0].timestamp < this.stationaryWindow * 0.8) {
         return false;
       }
-      
+
+      // Filter points to only those within the stationary window
+      const windowPoints = points.filter(p => points[points.length-1].timestamp - p.timestamp < this.stationaryWindow);
+
       // Calculate average position
       let sumX = 0, sumY = 0;
-      points.forEach(point => {
+      windowPoints.forEach(point => {
         sumX += point.x;
         sumY += point.y;
       });
       
-      const avgX = sumX / points.length;
-      const avgY = sumY / points.length;
+      const avgX = sumX / windowPoints.length;
+      const avgY = sumY / windowPoints.length;
       
       // Calculate average distance from average position
       let sumDistance = 0;
-      points.forEach(point => {
+      windowPoints.forEach(point => {
         const dx = point.x - avgX;
         const dy = point.y - avgY;
         sumDistance += Math.sqrt(dx*dx + dy*dy);
       });
       
-      const avgDistance = sumDistance / points.length;
+      const avgDistance = sumDistance / windowPoints.length;
       
       // Get the latest bounding box to calculate the threshold
-      const lastPoint = points[points.length - 1];
+      const lastPoint = windowPoints[windowPoints.length - 1];
       if (!lastPoint.boundingBox) return false;
       
       const bb = lastPoint.boundingBox;
@@ -110,8 +110,10 @@ class ObjectTracker {
         Math.pow(bb.maxY - bb.minY, 2)
       );
 
+      const isStationary = avgDistance <= (bbDiagonal * this.stationaryThreshold);
+
       // Object is stationary if average distance is less than threshold depending on bounding box size
-      return avgDistance <= (bbDiagonal * this.stationaryThreshold);
+      return isStationary
     }
 
     // Check all trajectories for objects that have not been seen for activeTTL milliseconds then move them to passive trajectories
@@ -136,7 +138,7 @@ class ObjectTracker {
 
     // Create a method to truncate the trajectory to the stationary window and update the trajectory
     truncateTrajectoryToStationaryWindow(trajectory, currentTime) {
-      const stationaryWindow = trajectory.points.filter(p => currentTime - p.timestamp < this.stationaryTimeout);
+      const stationaryWindow = trajectory.points.filter(p => currentTime - p.timestamp < this.stationaryWindow);
       trajectory.points = stationaryWindow;
     }
     

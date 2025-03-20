@@ -13,6 +13,7 @@ import ObjectTracker from "../services/ObjectTracker";
 const ACTIVE_PATH_COLOR = [0, 128, 255, 255]; // Blue for active trajectories
 const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency for passive trajectories
 const MARKER_COLOR = ACTIVE_PATH_COLOR;
+const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Light blue for stationary markers
 
 function TrajectoryView() {
     const { t } = useTranslation();
@@ -237,7 +238,7 @@ function TrajectoryView() {
                     })),
                     getPosition: d => d.position,
                     getLineColor: [255, 255, 255], // White outline for all markers
-                    getFillColor: MARKER_COLOR,
+                    getFillColor: STATIONARY_MARKER_COLOR,
                     getRadius: 5,
                     radiusUnits: 'pixels',
                     stroked: true,
