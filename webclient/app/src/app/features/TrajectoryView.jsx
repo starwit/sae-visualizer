@@ -15,6 +15,8 @@ const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency 
 const MARKER_COLOR = ACTIVE_PATH_COLOR;
 const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Light blue for stationary markers
 
+const MAX_PASSIVE_TRAJECTORIES_AGE = 30000; // Maximum age of passive trajectories in milliseconds
+
 function TrajectoryView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
@@ -25,7 +27,7 @@ function TrajectoryView() {
 
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
-    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500));
+    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500, MAX_PASSIVE_TRAJECTORIES_AGE));
     const [running, setRunning] = useState(false);
 
     const [viewState, setViewState] = useState({
@@ -156,6 +158,13 @@ function TrajectoryView() {
         return { width: viewWidth, height: viewHeight };
     };
 
+    // Get passive color based on age
+    function getColorForAge(createdAt) {
+        const age = new Date().getTime() - createdAt;
+        const alpha = Math.max(0, 255 - 255 * (age / MAX_PASSIVE_TRAJECTORIES_AGE)); // Fade out over time
+        return [...PASSIVE_PATH_COLOR.slice(0, 3), alpha];
+    };
+
     const backgroundLayer = new ScatterplotLayer({
         id: 'background',
         getPosition: d => d.position,
@@ -180,7 +189,7 @@ function TrajectoryView() {
                     id: 'passive-trajectory-paths',
                     data: passiveTrajectories,
                     getPath: d => d.path,
-                    getColor: PASSIVE_PATH_COLOR,
+                    getColor: d => getColorForAge(d.createdAt),
                     getWidth: 1.5, // Slightly thinner than active trajectories
                     widthUnits: 'pixels',
                     jointRounded: true,

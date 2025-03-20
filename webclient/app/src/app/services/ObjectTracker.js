@@ -1,9 +1,9 @@
 class ObjectTracker {
-    constructor(maxTrajectoryPoints = 500, maxPassiveTrajectories = 500) {
+    constructor(maxTrajectoryPoints = 500, maxPassiveTrajectoriesAge = 60000) {
       this.trajectories = new Map(); // Map of objectId to {points: [], stationary: boolean}
       this.passiveTrajectories = [];
       this.maxTrajectoryPoints = maxTrajectoryPoints; // Maximum number of points to keep in a trajectory
-      this.maxPassiveTrajectories = maxPassiveTrajectories; // Maximum number of passive trajectories to keep
+      this.maxPassiveTrajectoriesAge = maxPassiveTrajectoriesAge; // Maximum age of passive trajectories in milliseconds
       this.activeTTL = 1000; // Time to live in milliseconds before becoming passive
       this.stationaryWindow = 10000; // Time window in milliseconds to consider an object stationary
       this.stationaryThreshold = 0.05; // Threshold for considering an object stationary (factor of bounding box diagonal)
@@ -132,7 +132,8 @@ class ObjectTracker {
       this.passiveTrajectories.push({
         path: trajectory.points.map(p => [p.x, p.y]),
         timestamps: trajectory.points.map(p => p.timestamp),
-        isStationary: trajectory.stationary
+        isStationary: trajectory.stationary,
+        createdAt: new Date().getTime(),
       });
     }
 
@@ -142,13 +143,9 @@ class ObjectTracker {
       trajectory.points = stationaryWindow;
     }
     
-    // Process trajectories that haven't been updated recently
     purgeStaleTrajectories() {
-      // Limit the number of passive trajectories
-      if (this.passiveTrajectories.length > this.maxPassiveTrajectories) {
-        // Remove oldest passive trajectories if we have too many
-        this.passiveTrajectories.splice(0, this.passiveTrajectories.length - this.maxPassiveTrajectories);
-      }
+      // Remove passive trajectories that are too old
+      this.passiveTrajectories = this.passiveTrajectories.filter(traj => new Date().getTime() - traj.createdAt < this.maxPassiveTrajectoriesAge);
     }
     
     // Get active trajectory data in a format suitable for deck.gl
@@ -178,7 +175,8 @@ class ObjectTracker {
         id: `passive-${index}`,
         path: traj.path,
         timestamps: traj.timestamps,
-        isActive: false
+        isActive: false,
+        createdAt: traj.createdAt,
       }));
     }
     
