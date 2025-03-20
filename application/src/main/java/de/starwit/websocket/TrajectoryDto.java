@@ -27,6 +27,8 @@ public class TrajectoryDto {
 
 	private LocalDateTime receiveTimestamp;
 
+	private BoundingBox boundingBox = new BoundingBox();
+
 	public String getStreamId() {
 		return streamId;
 	}
@@ -83,11 +85,19 @@ public class TrajectoryDto {
 		this.shape = new Shape(width, height);
 	}
 
+	public BoundingBox getBoundingBox() {
+		return boundingBox;
+	}
+
+	public void setBoundingBox(BoundingBox boundingBox) {
+		this.boundingBox = boundingBox;
+	}
+
 	@Override
 	public String toString() {
 		return "TrajectoryDTO [streamId=" + streamId + ", classId=" + classId + ", objectId=" + objectId
-				+ ", hasGeoCoordinates=" + hasGeoCoordinates + ", coordinates=" + coordinates + ", receiveTimestamp="
-				+ receiveTimestamp + "]";
+				+ ", hasGeoCoordinates=" + hasGeoCoordinates + ", coordinates=" + coordinates + ", boundingBox=" + boundingBox 
+				+ ", receiveTimestamp=" + receiveTimestamp + "]";
 	}
 
 	class Coordinates {
@@ -162,6 +172,50 @@ public class TrajectoryDto {
 		@Override
 		public String toString() {
 			return "Shape [width=" + width + ", height=" + height + "]";
+		}
+	}
+
+	class BoundingBox {
+		private double minX;
+		private double minY;
+		private double maxX;
+		private double maxY;
+
+		public double getMinX() {
+			return minX;
+		}
+
+		public void setMinX(double minX) {
+			this.minX = minX;
+		}
+
+		public double getMinY() {
+			return minY;
+		}
+
+		public void setMinY(double minY) {
+			this.minY = minY;
+		}
+
+		public double getMaxX() {
+			return maxX;
+		}
+
+		public void setMaxX(double maxX) {
+			this.maxX = maxX;
+		}
+
+		public double getMaxY() {
+			return maxY;
+		}
+
+		public void setMaxY(double maxY) {
+			this.maxY = maxY;
+		}
+
+		@Override
+		public String toString() {
+			return "BoundingBoxCoordinates [minX=" + minX + ", minY=" + minY + ", maxX=" + maxX + ", maxY=" + maxY + "]";
 		}
 	}
 }
