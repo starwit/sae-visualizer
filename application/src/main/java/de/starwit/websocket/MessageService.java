@@ -17,6 +17,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import de.starwit.visionapi.Sae.BoundingBox;
 import de.starwit.visionapi.Sae.Detection;
 import de.starwit.visionapi.Sae.SaeMessage;
+import de.starwit.visionapi.Sae.Shape;
 
 import java.util.ArrayList;
 
@@ -45,6 +46,8 @@ public class MessageService {
     private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
         
         List<TrajectoryDto> trackedObjects = new ArrayList<>();
+
+        Shape shape = saeMessage.getFrame().getShape();
         
         for (Detection detection : saeMessage.getDetectionsList()) {
             var t = new TrajectoryDto();
@@ -53,9 +56,10 @@ public class MessageService {
             t.setClassId(detection.getClassId());
             t.setReceiveTimestamp(LocalDateTime.now());
             t.setStreamId(streamId);
-            t.setShape(saeMessage.getFrame().getShape().getWidth(), saeMessage.getFrame().getShape().getHeight());
+            t.setShape(shape.getWidth(), shape.getHeight());
             t.setHasGeoCoordinates(false);
             t = setNormalizedImageCoordinates(t, detection.getBoundingBox());
+            t = setBoundingBox(t, detection.getBoundingBox(), shape);
             if (detection.hasGeoCoordinate()) {
                 t.setHasGeoCoordinates(true);
                 t.getCoordinates().setLatitude(detection.getGeoCoordinate().getLatitude());
@@ -75,6 +79,14 @@ public class MessageService {
         //log.info("bb: " + bb.getMaxX() + ", " + bb.getMinX() + "; " + x + "," + y);
         t.getCoordinates().setX(x);
         t.getCoordinates().setY(y);
+        return t;
+    }
+    
+    private TrajectoryDto setBoundingBox(TrajectoryDto t, BoundingBox bb, Shape sh) {
+        t.getBoundingBox().setMinX(bb.getMinX() * sh.getWidth());
+        t.getBoundingBox().setMinY(bb.getMinY() * sh.getHeight());
+        t.getBoundingBox().setMaxX(bb.getMaxX() * sh.getWidth());
+        t.getBoundingBox().setMaxY(bb.getMaxY() * sh.getHeight());
         return t;
     }
 
