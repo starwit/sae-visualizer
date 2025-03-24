@@ -10,6 +10,13 @@ import { OrthographicView } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import ObjectTracker from "../services/ObjectTracker";
 
+const ACTIVE_PATH_COLOR = [0, 128, 255, 255]; // Blue for active trajectories
+const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency for passive trajectories
+const MARKER_COLOR = ACTIVE_PATH_COLOR;
+const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Light blue for stationary markers
+
+const MAX_PASSIVE_TRAJECTORIES_AGE = 30000; // Maximum age of passive trajectories in milliseconds
+
 function TrajectoryView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
@@ -20,7 +27,7 @@ function TrajectoryView() {
 
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
-    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500));
+    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500, MAX_PASSIVE_TRAJECTORIES_AGE));
     const [running, setRunning] = useState(false);
 
     const [viewState, setViewState] = useState({
@@ -151,6 +158,14 @@ function TrajectoryView() {
         return { width: viewWidth, height: viewHeight };
     };
 
+    // Get passive color based on age
+    function getColorForAge(createdAt) {
+        const age = new Date().getTime() - createdAt;
+        const alphaFactor = Math.pow(1 - (age / MAX_PASSIVE_TRAJECTORIES_AGE), 3); // Non-linear fade out
+        const alpha = Math.max(0, 255 * alphaFactor); 
+        return [...PASSIVE_PATH_COLOR.slice(0, 3), alpha];
+    };
+
     const backgroundLayer = new ScatterplotLayer({
         id: 'background',
         getPosition: d => d.position,
@@ -164,7 +179,8 @@ function TrajectoryView() {
 
     if (trajectories && trajectories.length > 0) {
         // First, separate active and passive trajectories
-        const activeTrajectories = trajectories.filter(t => t.isActive);
+        const activeTrajectories = trajectories.filter(t => t.isActive && !t.isStationary);
+        const stationaryTrajectories = trajectories.filter(t => t.isActive && t.isStationary);
         const passiveTrajectories = trajectories.filter(t => !t.isActive);
 
         // Add paths for passive trajectories (render these first, so they appear below active ones)
@@ -174,7 +190,7 @@ function TrajectoryView() {
                     id: 'passive-trajectory-paths',
                     data: passiveTrajectories,
                     getPath: d => d.path,
-                    getColor: d => d.color,
+                    getColor: d => getColorForAge(d.createdAt),
                     getWidth: 1.5, // Slightly thinner than active trajectories
                     widthUnits: 'pixels',
                     jointRounded: true,
@@ -192,7 +208,7 @@ function TrajectoryView() {
                     id: 'active-trajectory-paths',
                     data: activeTrajectories,
                     getPath: d => d.path,
-                    getColor: d => d.color,
+                    getColor: ACTIVE_PATH_COLOR,
                     getWidth: 2,
                     widthUnits: 'pixels',
                     jointRounded: true,
@@ -205,15 +221,34 @@ function TrajectoryView() {
             // Add points for the current positions (only for active trajectories)
             layers.push(
                 new ScatterplotLayer({
-                    id: 'current-positions',
+                    id: 'active-positions',
                     data: activeTrajectories.map(t => ({
                         position: t.path[t.path.length - 1],
-                        color: t.color,
                         id: t.id
                     })),
                     getPosition: d => d.position,
                     getLineColor: [255, 255, 255], // White outline for all markers
-                    getFillColor: d => d.color,
+                    getFillColor: MARKER_COLOR,
+                    getRadius: 5,
+                    radiusUnits: 'pixels',
+                    stroked: true,
+                    lineWidthMinPixels: 1,
+                })
+            );
+        }
+
+        // Add only markers for stationary trajectories
+        if (stationaryTrajectories.length > 0) {
+            layers.push(
+                new ScatterplotLayer({
+                    id: 'stationary-positions',
+                    data: stationaryTrajectories.map(t => ({
+                        position: t.path[t.path.length - 1],
+                        id: t.id
+                    })),
+                    getPosition: d => d.position,
+                    getLineColor: [255, 255, 255], // White outline for all markers
+                    getFillColor: STATIONARY_MARKER_COLOR,
                     getRadius: 5,
                     radiusUnits: 'pixels',
                     stroked: true,
