@@ -38,20 +38,30 @@ function TrajectoryView() {
         <>
             <div style={{
                 position: 'absolute', 
-                aspectRatio: '16/9', 
-                width: '100%', 
                 display: 'grid',
-                gridTemplateRows: '1fr 1fr',
-                gridTemplateColumns: '1fr 1fr',
-                gridGap: '10px',
-            }}>
-                {selectedStreams.map(stream => (
-                    <TrajectoryDrawer
-                        key={stream}
-                        stream={stream}
-                        running={running}
-                    />
-                ))}
+                placeItems: 'center',
+                height: '100vh',
+                width: '100vw',
+                top: 0,
+                left: 0,
+            }}> 
+                <div style={{
+                    position: 'relative', 
+                    aspectRatio: '16/9', 
+                    width: '100%', 
+                    display: 'grid',
+                    gridTemplateRows: '1fr 1fr',
+                    gridTemplateColumns: '1fr 1fr',
+                    gridGap: '10px',
+                }}>
+                    {selectedStreams.map(stream => (
+                        <TrajectoryDrawer
+                            key={stream}
+                            stream={stream}
+                            running={running}
+                        />
+                    ))}
+                </div>
             </div>
             <Box sx={{
                 position: 'fixed',

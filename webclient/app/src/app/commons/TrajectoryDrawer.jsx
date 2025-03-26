@@ -136,17 +136,6 @@ function TrajectoryDrawer(props) {
         return [...PASSIVE_PATH_COLOR.slice(0, 3), alpha];
     };
 
-    const backgroundLayer = new ScatterplotLayer({
-        id: 'background',
-        getPosition: d => d.position,
-        getRadius: 1,
-        getFillColor: [0, 0, 0, 0], // Transparent
-        getLineColor: [100, 100, 100], // Gray border
-        stroked: true,
-        filled: true,
-        lineWidthMinPixels: 1
-    });
-
     if (trajectories && trajectories.length > 0) {
         // First, separate active and passive trajectories
         const activeTrajectories = trajectories.filter(t => t.isActive && !t.isStationary);
@@ -229,21 +218,23 @@ function TrajectoryDrawer(props) {
     }
 
     return (
-        <div ref={deckGlContainer} style={{aspectRatio: '16/9', position:'absolute', width: '100%', borderColor: 'black', borderStyle: 'solid', borderWidth: '1px'}}>
-            {trajectories.length > 0 && (
-                <DeckGL
+        <>
+            <div id={stream} ref={deckGlContainer} style={{backgroundColor: 'rgba(149, 149, 149, 0.09)', position: 'relative'}} >
+                {trajectories.length > 0 && (
+                    <DeckGL
                     views={new OrthographicView({
                         id: 'ortho',
                         flipY: true // Y increases from top to bottom in image space
                     })}
                     viewState={viewState}
                     controller={false}
-                    layers={[backgroundLayer, ...layers]}
+                    layers={layers}
                     getCursor={() => 'default'}
                     _pickable={false}
-                />
-            )}
-        </div>
+                    />
+                )}
+            </div>
+        </>
     )
 }
 
