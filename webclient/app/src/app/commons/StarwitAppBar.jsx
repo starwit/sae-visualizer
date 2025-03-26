@@ -1,5 +1,6 @@
 import MapIcon from "@mui/icons-material/Map";
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import GridViewIcon from '@mui/icons-material/GridView';
 import {
     AppBar,
     Container,
@@ -52,7 +53,16 @@ function MyAppBar() {
                                 variant="outlined">
                                 <TrendingUpIcon />
                             </IconButton>
-                        </Tooltip>                                               
+                        </Tooltip>    
+                        <Tooltip title={t('grid.tooltip')}>
+                            <IconButton
+                                onClick={() => {/*TODO*/}}
+
+                                href="./#/grid"
+                                variant="outlined">
+                                <GridViewIcon />
+                            </IconButton>
+                        </Tooltip>                                           
                     </Toolbar>
                 </AppBar>
             </Container>
