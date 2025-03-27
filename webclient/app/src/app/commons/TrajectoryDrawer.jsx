@@ -4,6 +4,7 @@ import { OrthographicView } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import ObjectTracker from "../services/ObjectTracker";
 import WebSocketClient from "../services/WebSocketClient";
+import { Typography } from "@mui/material";
 
 const ACTIVE_PATH_COLOR = [0, 128, 255, 255]; // Blue for active trajectories
 const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency for passive trajectories
@@ -45,16 +46,11 @@ function TrajectoryDrawer(props) {
         return () => wsClient.current.disconnect();
     }, [running]);
 
-    function handleMessage(trackedObjectList) {
-        console.log(`${stream}: Received tracked object list`, trackedObjectList);
-    }
-
     useEffect(() => {
         const updateDimensions = () => {
             if (shape) {
                 const containerWidth = deckGlContainer.current.clientWidth;
                 const containerHeight = deckGlContainer.current.clientHeight;
-                console.log(`${stream}: containerWidth: ${containerWidth}, containerHeight: ${containerHeight}`);
 
                 const { width: frameWidth, height: frameHeight } = shape;
 
@@ -220,6 +216,9 @@ function TrajectoryDrawer(props) {
     return (
         <>
             <div id={stream} ref={deckGlContainer} style={{backgroundColor: 'rgba(149, 149, 149, 0.09)', position: 'relative'}} >
+                <Typography variant="body2" style={{position: 'absolute', top: 10, left: 10, color: 'rgba(149, 149, 149, 0.6)'}}>
+                    {stream}
+                </Typography>
                 {trajectories.length > 0 && (
                     <DeckGL
                     views={new OrthographicView({

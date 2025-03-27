@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
-import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import TrajectoryDrawer from "../commons/TrajectoryDrawer";
+import Chip from '@mui/material/Chip';
 
 function GridView() {
     const { t } = useTranslation();
