@@ -15,7 +15,7 @@ const MAX_PASSIVE_TRAJECTORIES_AGE = 120000; // Maximum age of passive trajector
 
 
 function TrajectoryDrawer(props) {
-    const { stream, running } = props;
+    const { stream, running, label } = props;
 
     const wsClient = useRef(new WebSocketClient());
 
@@ -217,7 +217,7 @@ function TrajectoryDrawer(props) {
         <>
             <div id={stream} ref={deckGlContainer} style={{backgroundColor: 'rgba(149, 149, 149, 0.09)', position: 'relative'}} >
                 <Typography variant="body2" style={{position: 'absolute', top: 10, left: 10, color: 'rgba(149, 149, 149, 0.6)'}}>
-                    {stream}
+                    {label}
                 </Typography>
                 {trajectories.length > 0 && (
                     <DeckGL

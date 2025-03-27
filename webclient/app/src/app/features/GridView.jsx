@@ -60,6 +60,7 @@ function GridView() {
                             key={stream}
                             stream={stream}
                             running={running}
+                            label={stream}
                         />
                     ))}
                 </div>
