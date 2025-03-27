@@ -1,45 +1,39 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
-import WebSocketClient from "../services/WebSocketClient";
-import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-import DeckGL from "@deck.gl/react";
-import { OrthographicView } from "@deck.gl/core";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import ObjectTracker from "../services/ObjectTracker";
 import TrajectoryDrawer from "../commons/TrajectoryDrawer";
+import Chip from '@mui/material/Chip';
 
-function TrajectoryView() {
+function GridView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
 
     const [streams, setStreams] = useState([]);
-    const [selectedStream, setSelectedStream] = useState("");
+    const [selectedStreams, setSelectedStreams] = useState([]);
 
     const [running, setRunning] = useState(false);
 
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
-            if (response.data && response.data.length > 0) {
-                setSelectedStream(response.data[0]);
-            }            
         });
     }, []);
 
+    // Reset tracked objects when stream is changed
+    useEffect(() => {
+        setRunning(false);
+    }, [selectedStreams]);
+    
     function toggleStream() {
         setRunning(!running);
     }
 
     const handleStreamSelectChange = (event) => {
-        setSelectedStream(event.target.value);
+        setSelectedStreams(event.target.value);
     };
-
-
-    console.log(`selectedStream: ${selectedStream}`);
-    console.log(`running: ${running}`);
 
     return (
         <>
@@ -57,11 +51,18 @@ function TrajectoryView() {
                     aspectRatio: '16/9', 
                     width: '100%', 
                     display: 'grid',
+                    gridTemplateRows: '1fr 1fr',
+                    gridTemplateColumns: '1fr 1fr',
+                    gridGap: '10px',
                 }}>
-                    <TrajectoryDrawer
-                        key={selectedStream}
-                        stream={selectedStream}
-                        running={running}/>
+                    {selectedStreams.map(stream => (
+                        <TrajectoryDrawer
+                            key={stream}
+                            stream={stream}
+                            running={running}
+                            label={stream}
+                        />
+                    ))}
                 </div>
             </div>
             <Box sx={{
@@ -70,7 +71,7 @@ function TrajectoryView() {
                 right: 10
             }}>
                 <Typography variant="h1">
-                    {t('trajectory.title')}
+                    {t('grid.title')}
                 </Typography>
             </Box>
             <Box sx={{
@@ -80,14 +81,15 @@ function TrajectoryView() {
                 width: '100%'
             }}>
                 <Stack direction="row">
-                    <FormControl sx={{ width: 350 }}>
+                    <FormControl sx={{ width: 500 }}>
                         <InputLabel id="stream-select">Stream</InputLabel>
                         <Select
                             labelId="stream-select"
                             id="stream-select-id"
-                            value={selectedStream}
-                            label="Stream"
+                            value={selectedStreams}
+                            label="Streams"
                             onChange={handleStreamSelectChange}
+                            multiple={true}
                         >
                             {streams.map((stream) => (
                                 <MenuItem key={stream} value={stream}>
@@ -110,4 +112,4 @@ function TrajectoryView() {
     )
 }
 
-export default TrajectoryView;
+export default GridView;

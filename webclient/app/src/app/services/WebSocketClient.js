@@ -27,14 +27,18 @@ class WebSocketClient {
             this.stompClient.onConnect = (frame) => {
                 console.log('Connected: ' + frame);
                 for (let stream of this.streams) {
-                    this.stompClient.subscribe('/topic/location/' + stream, (location) => {
-                        this.onMessageCallback(JSON.parse(location.body), stream);
-                    });
+                    this.#subscribe(stream);
                 }
             };
 
             this.stompClient.activate();
         }
+    }
+
+    #subscribe(stream) {
+        this.stompClient.subscribe('/topic/location/' + stream, (location) => {
+            this.onMessageCallback(JSON.parse(location.body), stream);
+        });
     }
 
     disconnect() {
