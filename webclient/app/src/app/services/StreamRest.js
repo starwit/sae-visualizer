@@ -2,7 +2,7 @@ import axios from "axios";
 
 class StreamRest  {
     constructor() {
-        this.baseUrl = "/sae-visualizer/api/messages";
+        this.baseUrl = window.location.pathname + "api/messages";
     }
 
     getAvailableStreams = () => {

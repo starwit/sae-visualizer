@@ -9,7 +9,7 @@ class WebSocketClient {
         this.streams = streams;
 
         this.stompClient = new Client({
-            brokerURL: '/sae-visualizer/location-websocket'
+            brokerURL: window.location.pathname + 'location-websocket'
         });   
 
         this.stompClient.onWebSocketError = (error) => {
