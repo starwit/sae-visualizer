@@ -36,6 +36,8 @@ spec:
               value: {{ .Values.config.valkey.port  | quote }}
             - name: SPRING_REDIS_STREAMIDS
               value: {{ join "," .Values.config.valkey.stream_ids | quote }}
+            - name: SERVER_SERVLET_CONTEXT_PATH
+              value: {{ .Values.app.context_path | quote }}
             {{- if .Values.auth.enabled }}
             - name: SPRING_PROFILES_ACTIVE
               value: auth
