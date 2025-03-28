@@ -49,7 +49,8 @@ function GridView() {
                 <div style={{
                     position: 'relative', 
                     aspectRatio: '16/9', 
-                    width: '100%', 
+                    height: 'calc(100vh - 250px)',
+                    maxWidth: '100vw',
                     display: 'grid',
                     gridTemplateRows: '1fr 1fr',
                     gridTemplateColumns: '1fr 1fr',
