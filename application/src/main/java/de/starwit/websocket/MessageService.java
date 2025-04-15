@@ -35,15 +35,17 @@ public class MessageService {
         log.debug("Message received: {} from {}", message.getId(), message.getStream());
         String protobuf_data = message.getValue().get("proto_data_b64");
         try {
-            SaeMessage proto = SaeMessage.parseFrom(Base64.getDecoder().decode(protobuf_data));
-            convertToDTOToQueue(proto, message.getStream());
+            SaeMessage msg = SaeMessage.parseFrom(Base64.getDecoder().decode(protobuf_data));
+            List<TrajectoryDto> trackedObjects = convertToDTOs(msg, message.getStream());
+            this.template.convertAndSend("/topic/location/" + message.getStream(), trackedObjects);
+            log.debug("Sent " + trackedObjects.size() + " messages");
         } catch (InvalidProtocolBufferException e) {
             log.error("Error decoding proto from message. streamId=" + message.getStream());
             log.debug(e.getMessage());
         }
     }
 
-    private void convertToDTOToQueue(SaeMessage saeMessage, String streamId) {
+    private List<TrajectoryDto> convertToDTOs(SaeMessage saeMessage, String streamId) {
         
         List<TrajectoryDto> trackedObjects = new ArrayList<>();
 
@@ -68,8 +70,7 @@ public class MessageService {
             trackedObjects.add(t);
         }
 
-        this.template.convertAndSend("/topic/location/" + streamId, trackedObjects);
-        log.debug("Sent " + trackedObjects.size() + " messages");
+        return trackedObjects;
     }
 
     private TrajectoryDto setNormalizedImageCoordinates(TrajectoryDto t, BoundingBox bb) {
