@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,7 @@ public class SubscriptionSynchronizer implements ApplicationListener<AbstractSub
     @Autowired
     private MessageService messageService;
 
-    private Map<String, List<String>> sessionIdsByDestination = new HashMap<>();
-    private Map<String, String> destinationBySessionId = new HashMap<>();
-
-    private Map<String, Subscription> subscriptionByDestination = new HashMap<>();
+    private Map<String, List<String>> sessionIdToDestinations = new HashMap<>();
 
     @Override
     public synchronized void onApplicationEvent(AbstractSubProtocolEvent event) {
@@ -50,7 +48,7 @@ public class SubscriptionSynchronizer implements ApplicationListener<AbstractSub
             String destination = headerAccessor.getDestination();
             log.info("SUBSCRIBE to " + destination + "(sessionId=" + sessionId + ")");
 
-            this.addSession(sessionId, destination);
+            this.addDestinationToSession(sessionId, destination);
 
             log.info("Added " + sessionId + " for " + destination);
         } else if (event instanceof SessionUnsubscribeEvent || event instanceof SessionDisconnectEvent) {
@@ -62,57 +60,46 @@ public class SubscriptionSynchronizer implements ApplicationListener<AbstractSub
         synchronizeSubscriptions();
 
         if (log.isInfoEnabled()) {
-            sessionIdsByDestination.entrySet().stream()
-                .forEach(entry -> {log.info(entry.getKey() + ": " + Arrays.toString(entry.getValue().toArray()));});
+            log.info("Active destinations: " + Arrays.toString(getUniqueDestinations().toArray()));
         }
         
     }
     
-    private void addSession(String sessionId, String destination) {
-        destinationBySessionId.put(sessionId, destination);
-        
-        List<String> existingIds = sessionIdsByDestination.get(destination);
-        if (existingIds == null) {
-            existingIds = new ArrayList<>();
-            sessionIdsByDestination.put(destination, existingIds);
+    private void addDestinationToSession(String sessionId, String destination) {
+        List<String> destinations = sessionIdToDestinations.get(sessionId);
+        if (destinations == null) {
+            destinations = new ArrayList<>();
+            sessionIdToDestinations.put(sessionId, destinations);
         }
-        existingIds.add(sessionId);
+        destinations.add(destination);
     }
     
     private void removeSession(String sessionId) {
-        String destination = destinationBySessionId.get(sessionId);
-        if (destination != null) {
-            List<String> existingIds = sessionIdsByDestination.get(destination);
-            existingIds.remove(sessionId);
-            if (existingIds.isEmpty()) {
-                destinationBySessionId.remove(sessionId);
-                sessionIdsByDestination.remove(destination);
-            }
-        }
+        sessionIdToDestinations.remove(sessionId);
     }
 
     private void synchronizeSubscriptions() {
+        List<String> activeDestinations = getUniqueDestinations();
+        streamMessageListenerContainer.stop();
+
         // Make sure that there is an active subscription for all active destinations (i.e. with sessions attached)
-        for (String destination : sessionIdsByDestination.keySet()) {
-            if (subscriptionByDestination.get(destination) == null) {
-                String streamId = streamIdFromDestination(destination);
-                Subscription subscription = streamMessageListenerContainer.receive(StreamOffset.latest(streamId), messageService::handleMessage);
-                subscriptionByDestination.put(destination, subscription);
-            }
+        for (String destination : activeDestinations) {
+            String streamId = streamIdFromDestination(destination);
+            log.info("Added subscription for " + destination);
+            streamMessageListenerContainer.receive(StreamOffset.latest(streamId), messageService::handleMessage);
         }
 
-        // Make sure there are no subscriptions for destinations with no sessions attached
-        for (String destination : subscriptionByDestination.keySet()) {
-            if (!sessionIdsByDestination.containsKey(destination)) {
-                Subscription existingSubscription = subscriptionByDestination.get(destination);
-                streamMessageListenerContainer.remove(existingSubscription);
-            }
-        }
-
+        streamMessageListenerContainer.start();
     }
 
     private String streamIdFromDestination(String destination) {
         return destination.substring(destination.lastIndexOf("/") + 1);
     }
-}
 
+    private List<String> getUniqueDestinations() {
+        return sessionIdToDestinations.values().stream()
+            .flatMap(List::stream)
+            .distinct()
+            .toList();
+    }
+}
