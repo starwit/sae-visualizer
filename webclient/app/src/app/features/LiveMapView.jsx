@@ -1,18 +1,33 @@
-import { DeckGL } from "@deck.gl/react";
 import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer, IconLayer } from "@deck.gl/layers";
+import { DeckGL } from "@deck.gl/react";
+import { useState, useEffect } from "react";
 
 function LiveMapView(props) {
     const { markerList, streams } = props;
 
-    const INITIAL_VIEW_STATE = {
-        longitude: 10.787001,     // Initial longitude (X coordinate)
-        latitude: 52.424239,      // Initial latitude (Y coordinate)
-        zoom: 19,            // Initial zoom level
-        pitch: 0,           // No tilt
-        bearing: 0          // No rotation
-    };
+    const [mapInitDone, setMapInitDone] = useState(false);
+
+    const [initialViewState, setInitialViewState] = useState({
+        longitude: 10.716988775029739,
+        latitude: 52.41988232741599,
+        zoom: 5,
+        pitch: 0,
+        bearing: 0
+    });
+
+    if (!mapInitDone && Object.keys(markerList).length > 0) {
+        setInitialViewState({
+            longitude: markerList[Object.keys(markerList)[0]][0].coordinates[0],
+            latitude: markerList[Object.keys(markerList)[0]][0].coordinates[1],
+            zoom: 17,
+            pitch: 0,
+            bearing: 0
+        });
+        setMapInitDone(true);
+    }
+
     const MAP_VIEW = new MapView({ repeat: true });
 
     const layers = setupLayers();
@@ -70,7 +85,7 @@ function LiveMapView(props) {
             <DeckGL
                 layers={layers}               // Add map layers
                 views={MAP_VIEW}              // Add map view settings
-                initialViewState={INITIAL_VIEW_STATE}  // Set initial position
+                initialViewState={initialViewState}  // Set initial position
                 controller={{ dragRotate: false }}       // Disable rotation
             />
     );
