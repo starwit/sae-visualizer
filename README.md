@@ -41,8 +41,9 @@ The following configuration will be used to connect to a running Valkey/Redis in
 spring.redis.host=localhost
 spring.redis.port=6379
 #spring.redis.password=yourpassword
-spring.redis.streamIds=stream1,stream2
+spring.redis.maxStreamAge=1s
 ```
+- `spring.redis.maxStreamAge` is used to decide whether a stream in Valkey is active or not (and should be exposed to the frontend) based on the age of the last message in the stream
 ### Authentication
 
 This application can be protected by an external authentication with Keycloak. In order to use authentication, you need a properly configured Keycloak instance and the following parameters:
