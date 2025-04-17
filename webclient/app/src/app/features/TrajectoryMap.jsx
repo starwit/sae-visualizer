@@ -36,9 +36,7 @@ function TrajectoryMap() {
     const [started, setStarted] = useState(false);
     const colorFunctions = useRef(new ColorFunctions());
 
-    const minMaxCoords = useRef({
-        minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity
-    });
+    const minMaxCoords = useRef(null);
     const firstDataTime = useRef(null);
     
     const [mapInitDone, setMapInitDone] = useState(false);
@@ -50,8 +48,17 @@ function TrajectoryMap() {
         bearing: 0
     });
 
+    function reinitAutoCentering() {
+        setMapInitDone(false);
+        firstDataTime.current = null;
+        minMaxCoords.current = {
+            minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity
+        };
+    }
+
+    // Automatically center the map: Collect some data points first and then calculate useful bounds
     useEffect(() => {
-        if (!mapInitDone) {
+        if (!mapInitDone && minMaxCoords.current !== null) {
             if (firstDataTime.current == null || Date.now() - firstDataTime.current < 1000) {
                 const longitudes = markerListToLongitudes(markerList);
                 const latitudes = markerListToLatitudes(markerList);
@@ -84,15 +91,12 @@ function TrajectoryMap() {
                     bearing: 0
                 });
                 setMapInitDone(true);
-                firstDataTime.current = null;
-                minMaxCoords.current = {
-                    minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity
-                };
                 console.log('Map auto-centered');
             }
         }
     }, [markerList]);
 
+    // Load available streams and set up WebSocket connection on component mount
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
             const streams = response.data;
@@ -110,6 +114,7 @@ function TrajectoryMap() {
         return () => wsClient.current.disconnect();
     }, []);
 
+    // Handle incoming messages from WebSocket
     function handleMessage(trackedObjectList, streamId) {
         let newMarkers = [];
         trackedObjectList.forEach(trackedObject => {
@@ -130,13 +135,13 @@ function TrajectoryMap() {
 
     function startStream() {
         wsClient.current.connect();
+        reinitAutoCentering();
         setStarted(true);
     }
 
     function stopStream() {
         wsClient.current.disconnect();
         setStarted(false);
-        setMapInitDone(false);
     }
 
     return (
