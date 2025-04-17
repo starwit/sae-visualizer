@@ -1,12 +1,29 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import { WebMercatorViewport } from '@math.gl/web-mercator';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
+import { Box, Fab, Typography } from "@mui/material";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import ColorFunctions from "../services/ColorFunctions";
 import StreamRest from "../services/StreamRest";
 import WebSocketClient from "../services/WebSocketClient";
 import LiveMapView from "./LiveMapView";
-import { Box, Card, Fab, IconButton, Stack, Typography } from "@mui/material";
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
-import ColorFunctions from "../services/ColorFunctions";
+
+function findMax(arr) {
+    return arr.reduce((a, b) => Math.max(a, b), -Infinity);
+}
+
+function findMin(arr) {
+    return arr.reduce((a, b) => Math.min(a, b), Infinity);
+}
+
+function markerListToLatitudes(markerList) {
+    return Object.keys(markerList).flatMap(stream => markerList[stream].map(m => m.coordinates[1]));
+}
+
+function markerListToLongitudes(markerList) {
+    return Object.keys(markerList).flatMap(stream => markerList[stream].map(m => m.coordinates[0]));
+}
 
 function TrajectoryMap() {
     const { t } = useTranslation();
@@ -18,6 +35,63 @@ function TrajectoryMap() {
     const [showMap, setShowMap] = useState(false);
     const [started, setStarted] = useState(false);
     const colorFunctions = useRef(new ColorFunctions());
+
+    const minMaxCoords = useRef({
+        minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity
+    });
+    const firstDataTime = useRef(null);
+    
+    const [mapInitDone, setMapInitDone] = useState(false);
+    const [initialViewState, setInitialViewState] = useState({
+        longitude: 10.716988775029739,
+        latitude: 52.41988232741599,
+        zoom: 5,
+        pitch: 0,
+        bearing: 0
+    });
+
+    useEffect(() => {
+        if (!mapInitDone) {
+            if (firstDataTime.current == null || Date.now() - firstDataTime.current < 1000) {
+                const longitudes = markerListToLongitudes(markerList);
+                const latitudes = markerListToLatitudes(markerList);
+    
+                if (latitudes.length > 0 && firstDataTime.current == null) {
+                    firstDataTime.current = Date.now();
+                    console.log('First data received');
+                }
+    
+                const minLat = findMin(latitudes);
+                const maxLat = findMax(latitudes);
+                const minLon = findMin(longitudes);
+                const maxLon = findMax(longitudes);
+    
+                const currentMinMax = minMaxCoords.current;
+                if (minLon < currentMinMax.minLon) currentMinMax.minLon = minLon;
+                if (maxLon > currentMinMax.maxLon) currentMinMax.maxLon = maxLon;
+                if (minLat < currentMinMax.minLat) currentMinMax.minLat = minLat;
+                if (maxLat > currentMinMax.maxLat) currentMinMax.maxLat = maxLat;
+            } else {
+                const fitViewport = new WebMercatorViewport().fitBounds(
+                    [[minMaxCoords.current.minLon, minMaxCoords.current.minLat], [minMaxCoords.current.maxLon, minMaxCoords.current.maxLat]],
+                    {width: window.innerWidth, height: window.innerHeight, padding: Math.min(window.innerWidth, window.innerHeight) / 5, minExtent: 0.002}
+                );
+                setInitialViewState({
+                    longitude: fitViewport.longitude,
+                    latitude: fitViewport.latitude,
+                    zoom: fitViewport.zoom,
+                    pitch: 0,
+                    bearing: 0
+                });
+                setMapInitDone(true);
+                firstDataTime.current = null;
+                minMaxCoords.current = {
+                    minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity
+                };
+                console.log('Map auto-centered');
+            }
+        }
+    }, [markerList]);
 
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
@@ -62,6 +136,7 @@ function TrajectoryMap() {
     function stopStream() {
         wsClient.current.disconnect();
         setStarted(false);
+        setMapInitDone(false);
     }
 
     return (
@@ -70,6 +145,7 @@ function TrajectoryMap() {
                 <LiveMapView
                     streams={streams}
                     markerList={markerList}
+                    initialViewState={initialViewState}
                 />
             ) : (
                 <></>
