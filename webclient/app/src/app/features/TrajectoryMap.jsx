@@ -44,8 +44,6 @@ function TrajectoryMap() {
         longitude: 10.716988775029739,
         latitude: 52.41988232741599,
         zoom: 5,
-        pitch: 0,
-        bearing: 0
     });
 
     function reinitAutoCentering() {
@@ -80,15 +78,21 @@ function TrajectoryMap() {
                 if (maxLat > currentMinMax.maxLat) currentMinMax.maxLat = maxLat;
             } else {
                 const fitViewport = new WebMercatorViewport().fitBounds(
-                    [[minMaxCoords.current.minLon, minMaxCoords.current.minLat], [minMaxCoords.current.maxLon, minMaxCoords.current.maxLat]],
-                    {width: window.innerWidth, height: window.innerHeight, padding: Math.min(window.innerWidth, window.innerHeight) / 5, minExtent: 0.002}
+                    [
+                        [minMaxCoords.current.minLon, minMaxCoords.current.minLat], 
+                        [minMaxCoords.current.maxLon, minMaxCoords.current.maxLat]
+                    ],
+                    {
+                        width: window.innerWidth, 
+                        height: window.innerHeight, 
+                        padding: Math.min(window.innerWidth, window.innerHeight) / 5, 
+                        minExtent: 0.002
+                    }
                 );
                 setInitialViewState({
                     longitude: fitViewport.longitude,
                     latitude: fitViewport.latitude,
                     zoom: fitViewport.zoom,
-                    pitch: 0,
-                    bearing: 0
                 });
                 setMapInitDone(true);
                 console.log('Map auto-centered');

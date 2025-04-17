@@ -1,6 +1,6 @@
 import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
-import { BitmapLayer, IconLayer } from "@deck.gl/layers";
+import { BitmapLayer, IconLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { DeckGL } from "@deck.gl/react";
 
 function LiveMapView(props) {
@@ -45,14 +45,15 @@ function LiveMapView(props) {
     }
 
     function createIconLayer(markerArray, streamId, color) {
-        return new IconLayer({
+        return new ScatterplotLayer({
             id: 'IconLayer-' + streamId,
             data: markerArray,
 
-            getColor: d => color,
-            getIcon: d => 'marker',
+            getFillColor: d => color,
             getPosition: d => d.coordinates,
-            getSize: 30,
+            getRadius: .7,
+            radiusMinPixels: 7,
+            radiusUnits: 'meters',
             iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
             iconMapping: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.json',
             pickable: true,
