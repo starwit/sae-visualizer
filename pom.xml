@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>de.starwit</groupId>
 	<artifactId>sae-visualizer</artifactId>
-	<version>0.0.14-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>sae-visualizer</name>
 	<description>Visualizes processed data from Starwit Awareness Engine</description>
 	<packaging>pom</packaging>
