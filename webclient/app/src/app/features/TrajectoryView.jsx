@@ -1,15 +1,10 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useTranslation } from 'react-i18next';
-import StreamRest from "../services/StreamRest";
-import WebSocketClient from "../services/WebSocketClient";
-import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-import DeckGL from "@deck.gl/react";
-import { OrthographicView } from "@deck.gl/core";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import ObjectTracker from "../services/ObjectTracker";
+import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import TrajectoryDrawer from "../commons/TrajectoryDrawer";
+import StreamRest from "../services/StreamRest";
 
 function TrajectoryView() {
     const { t } = useTranslation();

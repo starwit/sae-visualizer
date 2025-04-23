@@ -1,18 +1,11 @@
-import { DeckGL } from "@deck.gl/react";
 import { MapView } from '@deck.gl/core';
 import { TileLayer } from "@deck.gl/geo-layers";
-import { BitmapLayer, IconLayer } from "@deck.gl/layers";
+import { BitmapLayer, IconLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { DeckGL } from "@deck.gl/react";
 
 function LiveMapView(props) {
-    const { markerList, streams } = props;
+    const { markerList, streams, initialViewState } = props;
 
-    const INITIAL_VIEW_STATE = {
-        longitude: 10.787001,     // Initial longitude (X coordinate)
-        latitude: 52.424239,      // Initial latitude (Y coordinate)
-        zoom: 19,            // Initial zoom level
-        pitch: 0,           // No tilt
-        bearing: 0          // No rotation
-    };
     const MAP_VIEW = new MapView({ repeat: true });
 
     const layers = setupLayers();
@@ -23,7 +16,7 @@ function LiveMapView(props) {
         ];
 
         for (let stream in streams) {
-            let color = streams[stream]
+            let color = streams[stream];
             layers.push(createIconLayer(markerList[stream], stream, color));
         }
         return layers;
@@ -52,14 +45,15 @@ function LiveMapView(props) {
     }
 
     function createIconLayer(markerArray, streamId, color) {
-        return new IconLayer({
+        return new ScatterplotLayer({
             id: 'IconLayer-' + streamId,
             data: markerArray,
 
-            getColor: d => color,
-            getIcon: d => 'marker',
+            getFillColor: d => color,
             getPosition: d => d.coordinates,
-            getSize: 30,
+            getRadius: .7,
+            radiusMinPixels: 7,
+            radiusUnits: 'meters',
             iconAtlas: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.png',
             iconMapping: 'https://raw.githubusercontent.com/visgl/deck.gl-data/master/website/icon-atlas.json',
             pickable: true,
@@ -67,12 +61,12 @@ function LiveMapView(props) {
     }
 
     return (
-            <DeckGL
-                layers={layers}               // Add map layers
-                views={MAP_VIEW}              // Add map view settings
-                initialViewState={INITIAL_VIEW_STATE}  // Set initial position
-                controller={{ dragRotate: false }}       // Disable rotation
-            />
+        <DeckGL
+            layers={layers}               // Add map layers
+            views={MAP_VIEW}              // Add map view settings
+            initialViewState={initialViewState}  // Set initial position
+            controller={{ dragRotate: false }}       // Disable rotation
+        />
     );
 }
 
