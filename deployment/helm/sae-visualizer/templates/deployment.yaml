@@ -34,8 +34,8 @@ spec:
               value: {{ .Values.config.valkey.host | quote }}
             - name: SPRING_REDIS_PORT
               value: {{ .Values.config.valkey.port  | quote }}
-            - name: SPRING_REDIS_STREAMIDS
-              value: {{ join "," .Values.config.valkey.stream_ids | quote }}
+            - name: SPRING_REDIS_MAXSTREAMAGE
+              value: {{ .Values.config.valkey.maxStreamAge | quote }}
             - name: SERVER_SERVLET_CONTEXT_PATH
               value: {{ .Values.app.context_path | quote }}
             {{- if .Values.auth.enabled }}

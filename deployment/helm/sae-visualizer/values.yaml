@@ -11,11 +11,9 @@ fullnameOverride: "sae-visualizer"
 
 config:
   valkey:
-    stream_ids: 
-      - streamId1
-      - streamId2
     host: valkey-primary
     port: 6379
+    maxStreamAge: 1s
 
 app:
   context_path: "/"
