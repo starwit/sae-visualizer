@@ -1,6 +1,7 @@
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography, Tooltip } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,7 @@ function TrajectoryView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
     const fileInputRef = useRef(null);
+    const containerRef = useRef(null);
 
     const [streams, setStreams] = useState([]);
     const [selectedStream, setSelectedStream] = useState("");
@@ -46,6 +48,14 @@ function TrajectoryView() {
         }
     };
 
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        }
+    };
+
     console.log(`selectedStream: ${selectedStream}`);
     console.log(`running: ${running}`);
 
@@ -60,16 +70,20 @@ function TrajectoryView() {
                 top: 0,
                 left: 0,
             }}> 
-                <div style={{
-                    position: 'relative', 
-                    aspectRatio: '16/9', 
-                    width: '100%', 
-                    display: 'grid',
-                    backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-                    backgroundSize: 'contain',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                }}>
+                <div 
+                    ref={containerRef}
+                    style={{
+                        position: 'relative', 
+                        aspectRatio: '16/9', 
+                        width: '100%', 
+                        height: 'auto',
+                        display: 'grid',
+                        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                        backgroundSize: 'contain',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
+                >
                     <TrajectoryDrawer
                         key={selectedStream}
                         stream={selectedStream}
@@ -122,6 +136,14 @@ function TrajectoryView() {
                             onClick={handleImageUploadClick}
                         >
                             <AddPhotoAlternateIcon/>
+                        </Fab>
+                    </Tooltip>
+                    <Tooltip title="Enter fullscreen">
+                        <Fab 
+                            color="secondary"
+                            onClick={toggleFullscreen}
+                        >
+                            <FullscreenIcon/>
                         </Fab>
                     </Tooltip>
                     <input 
