@@ -13,6 +13,7 @@ import {
 import React from "react";
 import {useTranslation} from 'react-i18next';
 import general from "../assets/images/logo_color.png";
+import SettingsMenu from './SettingsMenu';
 
 function MyAppBar() {
     const {t} = useTranslation();
@@ -62,7 +63,8 @@ function MyAppBar() {
                                 variant="outlined">
                                 <GridViewIcon />
                             </IconButton>
-                        </Tooltip>                                           
+                        </Tooltip>    
+                        <SettingsMenu />                      
                     </Toolbar>
                 </AppBar>
             </Container>

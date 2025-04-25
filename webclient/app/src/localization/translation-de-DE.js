@@ -8,6 +8,15 @@ const translationDeDE = {
     "trajectory.tooltip": "Trajektorienansicht",
     "trajectory.title": "Trajektorienansicht",
     "grid.title": "Rasteransicht",
-    "home.copyright": "Starwit Technologies GmbH"
+    "home.copyright": "Starwit Technologies GmbH",
+    
+    // Settings menu translations
+    "settings.tooltip": "Einstellungen",
+    "settings.title": "Einstellungen",
+    "settings.trajectoryDecay": "Trajektorienausblendung",
+    "settings.trajectoryDecayDescription": "Zeit bis inaktive Trajektorien vollständig ausgeblendet sind (in Sekunden)",
+    "settings.seconds": "Sekunden",
+    "common.cancel": "Abbrechen",
+    "common.save": "Speichern"
 };
 export default translationDeDE;

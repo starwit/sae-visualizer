@@ -5,25 +5,24 @@ import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import ObjectTracker from "../services/ObjectTracker";
 import WebSocketClient from "../services/WebSocketClient";
 import { Typography } from "@mui/material";
+import { useSettings } from "../contexts/SettingsContext";
 
 const ACTIVE_PATH_COLOR = [0, 128, 255, 255]; // Blue for active trajectories
 const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency for passive trajectories
 const MARKER_COLOR = ACTIVE_PATH_COLOR;
 const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Light blue for stationary markers
 
-const MAX_PASSIVE_TRAJECTORIES_AGE = 120000; // Maximum age of passive trajectories in milliseconds
-
-
 function TrajectoryDrawer(props) {
     const { stream, running, label } = props;
-
+    const { trajectoryDecayMs } = useSettings();
+    
     const wsClient = useRef(new WebSocketClient());
 
     const deckGlContainer = useRef(null);
 
     const [trajectories, setTrajectories] = useState([]);
     const [shape, setShape] = useState({});
-    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500, MAX_PASSIVE_TRAJECTORIES_AGE));
+    const [objectTracker, setObjectTracker] = useState(new ObjectTracker(500, trajectoryDecayMs));
 
     const [viewState, setViewState] = useState({
         target: [0, 0, 0],
@@ -37,14 +36,14 @@ function TrajectoryDrawer(props) {
     useEffect(() => {
         if (running) {
             setTrajectories([]);
-            setObjectTracker(new ObjectTracker(500, MAX_PASSIVE_TRAJECTORIES_AGE));
+            setObjectTracker(new ObjectTracker(500, trajectoryDecayMs));
             wsClient.current.setup(handleMessage, [stream]);
             wsClient.current.connect();
         } else {
             wsClient.current.disconnect();
         }
         return () => wsClient.current.disconnect();
-    }, [running]);
+    }, [running, trajectoryDecayMs]);
 
     useEffect(() => {
         const updateDimensions = () => {
@@ -127,7 +126,7 @@ function TrajectoryDrawer(props) {
     // Get passive color based on age
     function getColorForAge(createdAt) {
         const age = new Date().getTime() - createdAt;
-        const alphaFactor = Math.pow(1 - (age / MAX_PASSIVE_TRAJECTORIES_AGE), 3); // Non-linear fade out
+        const alphaFactor = Math.pow(1 - (age / trajectoryDecayMs), 3); // Non-linear fade out
         const alpha = Math.max(0, 255 * alphaFactor); 
         return [...PASSIVE_PATH_COLOR.slice(0, 3), alpha];
     };
