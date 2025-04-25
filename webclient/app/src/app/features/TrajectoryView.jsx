@@ -1,6 +1,7 @@
 import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
-import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography, Tooltip } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import TrajectoryDrawer from "../commons/TrajectoryDrawer";
@@ -9,11 +10,12 @@ import StreamRest from "../services/StreamRest";
 function TrajectoryView() {
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
+    const fileInputRef = useRef(null);
 
     const [streams, setStreams] = useState([]);
     const [selectedStream, setSelectedStream] = useState("");
-
     const [running, setRunning] = useState(false);
+    const [backgroundImage, setBackgroundImage] = useState(null);
 
     useEffect(() => {
         streamRest.getAvailableStreams().then(response => {
@@ -32,6 +34,17 @@ function TrajectoryView() {
         setSelectedStream(event.target.value);
     };
 
+    const handleImageUploadClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+            setBackgroundImage(imageUrl);
+        }
+    };
 
     console.log(`selectedStream: ${selectedStream}`);
     console.log(`running: ${running}`);
@@ -52,6 +65,10 @@ function TrajectoryView() {
                     aspectRatio: '16/9', 
                     width: '100%', 
                     display: 'grid',
+                    backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                    backgroundSize: 'contain',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
                 }}>
                     <TrajectoryDrawer
                         key={selectedStream}
@@ -74,7 +91,7 @@ function TrajectoryView() {
                 left: 10,
                 width: '100%'
             }}>
-                <Stack direction="row">
+                <Stack direction="row" spacing={2}>
                     <FormControl sx={{ width: 350 }}>
                         <InputLabel id="stream-select">Stream</InputLabel>
                         <Select
@@ -99,6 +116,21 @@ function TrajectoryView() {
                             <PlayCircleFilledWhiteIcon/> :
                             <StopCircleIcon/>}
                     </Fab>
+                    <Tooltip title="Upload background image">
+                        <Fab 
+                            color="secondary"
+                            onClick={handleImageUploadClick}
+                        >
+                            <AddPhotoAlternateIcon/>
+                        </Fab>
+                    </Tooltip>
+                    <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        style={{ display: 'none' }} 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                    />
                 </Stack>
             </Box>
         </>
