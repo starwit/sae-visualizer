@@ -1,6 +1,6 @@
 import { WebMercatorViewport } from '@math.gl/web-mercator';
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import { Box, Fab, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
@@ -175,8 +175,8 @@ function TrajectoryMap() {
             }}>
                 <Fab color="primary">
                     {!started ?
-                        <PlayCircleFilledWhiteIcon onClick={startStream} /> :
-                        <StopCircleIcon onClick={stopStream} />}
+                        <PlayArrowIcon onClick={startStream} /> :
+                        <StopIcon onClick={stopStream} />}
                 </Fab>
             </Box>
         </>
