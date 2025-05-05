@@ -7,10 +7,10 @@ import WebSocketClient from "../services/WebSocketClient";
 import { Typography } from "@mui/material";
 import { useSettings } from "../contexts/SettingsContext";
 
-const ACTIVE_PATH_COLOR = [0, 128, 255, 255]; // Blue for active trajectories
-const PASSIVE_PATH_COLOR = [150, 150, 150, 200]; // Grey with some transparency for passive trajectories
-const MARKER_COLOR = ACTIVE_PATH_COLOR;
-const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Light blue for stationary markers
+const ACTIVE_PATH_COLOR = [100, 200, 0, 255]; // Green for active trajectories
+const PASSIVE_PATH_COLOR = [0, 128, 255, 200]; // Blue with some transparency for passive trajectories
+const MARKER_COLOR = [90, 190, 0, 255]; // Green for active markers
+const STATIONARY_MARKER_COLOR = [137, 196, 255, 255]; // Blue for stationary markers
 
 function TrajectoryDrawer(props) {
     const { stream, running, label } = props;
