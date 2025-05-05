@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 import { Box, Card, Fab, FormControl, IconButton, InputLabel, MenuItem, OutlinedInput, Select, Stack, Typography } from "@mui/material";
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import TrajectoryDrawer from "../commons/TrajectoryDrawer";
 import Chip from '@mui/material/Chip';
 
@@ -104,8 +104,8 @@ function GridView() {
                         onClick={toggleStream}
                     >
                         {!running ?
-                            <PlayCircleFilledWhiteIcon/> :
-                            <StopCircleIcon/>}
+                            <PlayArrowIcon/> :
+                            <StopIcon/>}
                     </Fab>
                 </Stack>
             </Box>

@@ -1,5 +1,5 @@
-import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography, Tooltip } from "@mui/material";
@@ -127,8 +127,8 @@ function TrajectoryView() {
                         onClick={toggleStream}
                     >
                         {!running ?
-                            <PlayCircleFilledWhiteIcon/> :
-                            <StopCircleIcon/>}
+                            <PlayArrowIcon/> :
+                            <StopIcon/>}
                     </Fab>
                     <Tooltip title="Upload background image">
                         <Fab 
