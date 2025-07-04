@@ -1,6 +1,17 @@
 # SAE Visualizer
 Starwit Awareness Engine is processing video material and extracts results likge movements of objects or geo-positions of objects. This component shall visualize these results. It is a Spring Boot app, that connects to SAE's central communication bus and sends data to a ReactJS frontend. 
 
+Please refer to central [SAE repository](https://github.com/starwit/starwit-awareness-engine) for an overview of all SAE functions.
+
+## What does it do
+Visualizer can show moving objects in various modes. Following image show map view, which places all tracked objects on a map.
+
+![map view](doc/img/visualizer_map.jpg)
+
+For many applications observing actual trajectories are helpful. Thus Visualizer can display trajectory sets from one or more sources. Next image show trajectories captured by one camera.
+
+![map view](doc/img/visualizer_trajectories.jpg)
+
 ## How to use
 
 This application needs a connection to ValKey/Redis bus of a running SAE instance. Connection details can be configured via [application.properties](application/src/main/resources/application.properties) or environment variables.
@@ -57,3 +68,6 @@ spring.security.oauth2.client.registration.keycloak.client-id=aicockpit
 spring.security.oauth2.client.registration.keycloak.client-secret=aicockpit
 spring.security.oauth2.client.registration.keycloak.scope=openid
 ```
+
+## License
+Software in this repository is licensed under the AGPL-3.0 license. See [license agreement](LICENSE) for more details.

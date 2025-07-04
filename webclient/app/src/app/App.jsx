@@ -1,6 +1,5 @@
 import {Container} from "@mui/material";
 import {CssBaseline} from "@mui/material";
-import '@mui/material/styles/styled';
 import React from "react";
 import {Route, Routes} from "react-router-dom";
 import StarwitAppBar from "./commons/StarwitAppBar";
