@@ -4,10 +4,10 @@
     "license": "AGPLv3",
     "private": true,
     "dependencies": {
-        "@deck.gl/core": "^9.1.12",
-        "@deck.gl/geo-layers": "^9.1.12",
-        "@deck.gl/layers": "^9.1.12",
-        "@deck.gl/react": "^9.1.12",
+        "@deck.gl/core": "^9.1.13",
+        "@deck.gl/geo-layers": "^9.1.13",
+        "@deck.gl/layers": "^9.1.13",
+        "@deck.gl/react": "^9.1.13",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
         "@math.gl/web-mercator": "^4.1.0",
@@ -17,7 +17,7 @@
         "axios": "1.10.0",
         "color-convert": "^3.1.0",
         "i": "^0.3.7",
-        "i18next": "^25.2.0",
+        "i18next": "^25.3.2",
         "i18next-browser-languagedetector": "^8.1.0",
         "npm": "^11.4.0",
         "react": "^19.1.0",
@@ -35,13 +35,13 @@
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.4.1",
-        "eslint": "^9.27.0",
+        "eslint": "^9.31.0",
         "eslint-config-google": "^0.14.0",
         "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^7.0.0",
         "eslint-plugin-react": "^7.37.5",
         "vfile": "npm:vfile@^6.0.1",
-        "vite": "^7.0.2"
+        "vite": "^7.0.4"
     }
 }
