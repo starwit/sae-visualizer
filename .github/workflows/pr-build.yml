@@ -11,7 +11,7 @@ on:
 # just runs Maven, NPM and Docker build
 jobs:
   build:
-    name: "Install software"
+    name: "Install software & build with Maven"
     runs-on: [self-hosted, linux, X64]
 
     steps:
