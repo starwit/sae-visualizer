@@ -7,11 +7,14 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  packages: read
+
 
 # just runs Maven, NPM and Docker build
 jobs:
   build:
-    name: "Install software"
+    name: "Install software & build with Maven"
     runs-on: [self-hosted, linux, X64]
 
     steps:
@@ -35,8 +38,7 @@ jobs:
       run: mvn clean -B package --settings .github/workflows/settings.xml --file pom.xml
       env:
         CI: false
-        PRIVATE_REPO_USERNAME: ${{ vars.PRIVATE_REPO_USERNAME }}
-        MAVEN_REPO_READ: ${{ secrets.MAVEN_REPO_READ }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   checks:
     name: "Checks"
