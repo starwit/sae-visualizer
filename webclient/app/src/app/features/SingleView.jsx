@@ -1,14 +1,14 @@
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography, Tooltip } from "@mui/material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
+import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Tooltip, Typography } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import TrajectoryDrawer from "../commons/TrajectoryDrawer";
 import StreamRest from "../services/StreamRest";
 
-function TrajectoryView() {
+function SingleView(props) {
+    const { DrawerComponent } = props;
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
     const fileInputRef = useRef(null);
@@ -84,7 +84,7 @@ function TrajectoryView() {
                         backgroundRepeat: 'no-repeat'
                     }}
                 >
-                    <TrajectoryDrawer
+                    <DrawerComponent
                         key={selectedStream}
                         stream={selectedStream}
                         running={running}/>
@@ -159,4 +159,4 @@ function TrajectoryView() {
     )
 }
 
-export default TrajectoryView;
+export default SingleView;
