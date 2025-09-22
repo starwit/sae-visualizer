@@ -25,6 +25,7 @@ function HeatmapDrawer(props) {
     
     useEffect(() => {
         if (running) {
+            console.log("running effect", detections)
             setDetections([]);
             wsClient.current.setup(handleMessage, [stream]);
             wsClient.current.connect();
@@ -39,14 +40,12 @@ function HeatmapDrawer(props) {
             updateShape(detectionList);
 
             const currentTimestamp = new Date().getTime();
-            detectionList.forEach(detection => {
-                detections.push({
-                    x: detection.coordinates.x,
-                    y: detection.coordinates.y,
-                    timestamp: currentTimestamp,
-                });
-            });
-            setDetections(Array.from(detections));
+            const newDetections = detectionList.map(detection => ({
+                x: detection.coordinates.x,
+                y: detection.coordinates.y,
+                timestamp: currentTimestamp,
+            }));
+            setDetections(oldDetections => oldDetections.concat(newDetections));
         }
     }
 
