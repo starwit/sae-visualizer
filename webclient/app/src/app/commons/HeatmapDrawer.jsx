@@ -74,6 +74,10 @@ function HeatmapDrawer(props) {
 
                 const zoom = Math.log2(scale);
 
+                if ( !(Number.isFinite(zoom) && Number.isFinite(frameHeight) && Number.isFinite(frameWidth)) ) {
+                    return;
+                }
+
                 setViewState({
                     target: [frameWidth / 2, frameHeight / 2, 0],
                     zoom,
@@ -123,21 +127,20 @@ function HeatmapDrawer(props) {
     const layers = [];
 
     if (detections && detections.length > 0) {
-            // Add points for the current positions (only for active trajectories)
-            layers.push(
-                new HeatmapLayer({
-                    id: 'detections',
-                    data: detections.map(d => ({
-                        position: [d.x, d.y]
-                    })),
-                    getPosition: d => d.position,
-                    aggregation: 'SUM',
-                    radiusPixels: 20,
-                })
-            );
-        }
+        // Add points for the current positions (only for active trajectories)
+        layers.push(
+            new HeatmapLayer({
+                id: 'detections',
+                data: detections.map(d => ({
+                    position: [d.x, d.y]
+                })),
+                getPosition: d => d.position,
+                aggregation: 'SUM',
+                radiusPixels: 20,
+            })
+        );
+    }
 
-    console.log(detections, layers, viewState)
     return (
         <>
             <div id={stream} ref={deckGlContainer} style={{backgroundColor: 'rgba(149, 149, 149, 0.09)', position: 'relative'}} >
