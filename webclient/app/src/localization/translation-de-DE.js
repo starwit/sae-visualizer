@@ -4,10 +4,12 @@ const translationDeDE = {
     "app.title": "SAE Visualizer",
     "map.title": "Live Kartenansicht",
     "map.tooltip": "Kartenansicht",
-    "grid.tooltip": "Rasteransicht",
-    "trajectory.tooltip": "Trajektorienansicht",
-    "trajectory.title": "Trajektorienansicht",
     "grid.title": "Rasteransicht",
+    "grid.tooltip": "Rasteransicht",
+    "trajectory.title": "Trajektorienansicht",
+    "trajectory.tooltip": "Trajektorienansicht",
+    "heatmap.title": "Heatmap-Ansicht",
+    "heatmap.tooltip": "Heatmap-Ansicht",
     "home.copyright": "Starwit Technologies GmbH",
     
     // Settings menu translations

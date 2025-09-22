@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import StreamRest from "../services/StreamRest";
 
 function SingleView(props) {
-    const { DrawerComponent } = props;
+    const { DrawerComponent, title } = props;
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
     const fileInputRef = useRef(null);
@@ -32,15 +32,15 @@ function SingleView(props) {
         setRunning(!running);
     }
 
-    const handleStreamSelectChange = (event) => {
+    function handleStreamSelectChange(event) {
         setSelectedStream(event.target.value);
     };
 
-    const handleImageUploadClick = () => {
+    function handleImageUploadClick() {
         fileInputRef.current.click();
     };
 
-    const handleImageChange = (event) => {
+    function handleImageChange(event) {
         const file = event.target.files[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file);
@@ -48,16 +48,13 @@ function SingleView(props) {
         }
     };
 
-    const toggleFullscreen = () => {
+    function toggleFullscreen() {
         if (!document.fullscreenElement) {
             containerRef.current.requestFullscreen().catch(err => {
                 console.error(`Error attempting to enable fullscreen: ${err.message}`);
             });
         }
     };
-
-    console.log(`selectedStream: ${selectedStream}`);
-    console.log(`running: ${running}`);
 
     return (
         <>
@@ -96,7 +93,7 @@ function SingleView(props) {
                 right: 10
             }}>
                 <Typography variant="h1">
-                    {t('trajectory.title')}
+                    {title}
                 </Typography>
             </Box>
             <Box sx={{

@@ -4,10 +4,12 @@ const translationEnEN = {
     "app.title": "SAE Visualizer",
     "map.title": "Map Live View",
     "map.tooltip": "Show Map",
-    "grid.tooltip": "Grid View",
-    "trajectory.tooltip": "Show Trajectories",
-    "trajectory.title": "Trajectory View",
     "grid.title": "Grid View",
+    "grid.tooltip": "Grid View",
+    "trajectory.title": "Trajectory View",
+    "trajectory.tooltip": "Show Trajectories",
+    "heatmap.title": "Heatmap View",
+    "heatmap.tooltip": "Show Heatmap",
     "home.copyright": "Starwit Technologies GmbH",
     
     // Settings menu translations

@@ -10,8 +10,10 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import GridView from "./features/GridView";
 import SingleView from "./features/SingleView";
 import TrajectoryMap from "./features/TrajectoryMap";
+import { useTranslation } from 'react-i18next';
 
 function App() {
+    const { t } = useTranslation();
     return (
         <React.Fragment>
             <ErrorHandler>
@@ -20,10 +22,10 @@ function App() {
                     <StarwitAppBar />
                     <Container sx={{paddingTop: "4em"}}>
                         <Routes>
-                            <Route path="/heatmap" element={<SingleView DrawerComponent={HeatmapDrawer} />} />
-                            <Route path="/trajectory" element={<SingleView DrawerComponent={TrajectoryDrawer} />} />
+                            <Route path="/heatmap" element={<SingleView DrawerComponent={HeatmapDrawer} title={t('heatmap.title')} />} />
+                            <Route path="/trajectory" element={<SingleView DrawerComponent={TrajectoryDrawer} title={t('trajectory.title')} />} />
                             <Route path="/grid" element={<GridView />} />
-                            <Route path="/" element={<TrajectoryMap />} />
+                            <Route path="/map" element={<TrajectoryMap />} />
                         </Routes>
                     </Container>
                     <StarwitFooter />

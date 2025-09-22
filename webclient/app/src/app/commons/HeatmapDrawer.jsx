@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
-import DeckGL from "@deck.gl/react";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { OrthographicView } from "@deck.gl/core";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import ObjectTracker from "../services/ObjectTracker";
-import WebSocketClient from "../services/WebSocketClient";
+import DeckGL from "@deck.gl/react";
 import { Typography } from "@mui/material";
-import { useSettings } from "../contexts/SettingsContext";
+import { useEffect, useRef, useState } from "react";
+import WebSocketClient from "../services/WebSocketClient";
 
 function HeatmapDrawer(props) {
     const { stream, running, label } = props;
@@ -15,7 +13,7 @@ function HeatmapDrawer(props) {
 
     const deckGlContainer = useRef(null);
 
-    const [trajectories, setTrajectories] = useState([]);
+    const [detections, setDetections] = useState([]);
     const [shape, setShape] = useState({});
 
     const [viewState, setViewState] = useState({
@@ -24,22 +22,36 @@ function HeatmapDrawer(props) {
         minZoom: -5,
         maxZoom: 10
     });
-
-    const layers = [];
-
+    
     useEffect(() => {
         if (running) {
-            setTrajectories([]);
+            setDetections([]);
             wsClient.current.setup(handleMessage, [stream]);
             wsClient.current.connect();
         } else {
             wsClient.current.disconnect();
         }
         return () => wsClient.current.disconnect();
-    }, [running, trajectoryDecayMs]);
+    }, [running]);
+
+    function handleMessage(detectionList) {
+        if (detectionList.length > 0 && running) {
+            updateShape(detectionList);
+
+            const currentTimestamp = new Date().getTime();
+            detectionList.forEach(detection => {
+                detections.push({
+                    x: detection.coordinates.x,
+                    y: detection.coordinates.y,
+                    timestamp: currentTimestamp,
+                });
+            });
+            setDetections(Array.from(detections));
+        }
+    }
 
     useEffect(() => {
-        const updateDimensions = () => {
+        function updateDimensions() {
             if (shape) {
                 const containerWidth = deckGlContainer.current.clientWidth;
                 const containerHeight = deckGlContainer.current.clientHeight;
@@ -72,15 +84,9 @@ function HeatmapDrawer(props) {
         };
 
         updateDimensions();
-        window.addEventListener('resize', updateDimensions);
+        window.addEventListener('resize', updateDimensions)
         return () => window.removeEventListener('resize', updateDimensions);
     }, [shape]);
-
-    function handleMessage(trackedObjectList) {
-        if (trackedObjectList.length > 0) {
-            updateShape(trackedObjectList);
-        }
-    }
     
     function updateShape(trackedObjectList) {
         const newShape = trackedObjectList[0].shape;
@@ -93,7 +99,7 @@ function HeatmapDrawer(props) {
     }
 
     // Function to calculate the viewport dimensions that maintain aspect ratio
-    const calculateViewportDimensions = (containerWidth, containerHeight, frameWidth, frameHeight) => {
+    function calculateViewportDimensions(containerWidth, containerHeight, frameWidth, frameHeight) {
         if (!frameWidth || !frameHeight) return { width: containerWidth, height: containerHeight };
 
         const frameAspectRatio = frameWidth / frameHeight;
@@ -114,94 +120,31 @@ function HeatmapDrawer(props) {
         return { width: viewWidth, height: viewHeight };
     };
 
-    if (trajectories && trajectories.length > 0) {
-        // First, separate active and passive trajectories
-        const activeTrajectories = trajectories.filter(t => t.isActive && !t.isStationary);
-        const stationaryTrajectories = trajectories.filter(t => t.isActive && t.isStationary);
-        const passiveTrajectories = trajectories.filter(t => !t.isActive);
+    const layers = [];
 
-        // Add paths for passive trajectories (render these first, so they appear below active ones)
-        if (passiveTrajectories.length > 0) {
-            layers.push(
-                new PathLayer({
-                    id: 'passive-trajectory-paths',
-                    data: passiveTrajectories,
-                    getPath: d => d.path,
-                    getColor: d => getColorForAge(d.createdAt),
-                    getWidth: 1.5, // Slightly thinner than active trajectories
-                    widthUnits: 'pixels',
-                    jointRounded: true,
-                    capRounded: true,
-                    billboard: false,
-                    miterLimit: 2
-                })
-            );
-        }
-
-        // Add paths for active trajectories
-        if (activeTrajectories.length > 0) {
-            layers.push(
-                new PathLayer({
-                    id: 'active-trajectory-paths',
-                    data: activeTrajectories,
-                    getPath: d => d.path,
-                    getColor: ACTIVE_PATH_COLOR,
-                    getWidth: 2,
-                    widthUnits: 'pixels',
-                    jointRounded: true,
-                    capRounded: true,
-                    billboard: false,
-                    miterLimit: 2,
-                })
-            );
-
+    if (detections && detections.length > 0) {
             // Add points for the current positions (only for active trajectories)
             layers.push(
-                new ScatterplotLayer({
-                    id: 'active-positions',
-                    data: activeTrajectories.map(t => ({
-                        position: t.path[t.path.length - 1],
-                        id: t.id
+                new HeatmapLayer({
+                    id: 'detections',
+                    data: detections.map(d => ({
+                        position: [d.x, d.y]
                     })),
                     getPosition: d => d.position,
-                    getLineColor: [255, 255, 255], // White outline for all markers
-                    getFillColor: MARKER_COLOR,
-                    getRadius: 5,
-                    radiusUnits: 'pixels',
-                    stroked: true,
-                    lineWidthMinPixels: 1,
+                    aggregation: 'SUM',
+                    radiusPixels: 20,
                 })
             );
         }
 
-        // Add only markers for stationary trajectories
-        if (stationaryTrajectories.length > 0) {
-            layers.push(
-                new ScatterplotLayer({
-                    id: 'stationary-positions',
-                    data: stationaryTrajectories.map(t => ({
-                        position: t.path[t.path.length - 1],
-                        id: t.id
-                    })),
-                    getPosition: d => d.position,
-                    getLineColor: [255, 255, 255], // White outline for all markers
-                    getFillColor: STATIONARY_MARKER_COLOR,
-                    getRadius: 5,
-                    radiusUnits: 'pixels',
-                    stroked: true,
-                    lineWidthMinPixels: 1,
-                })
-            );
-        }
-    }
-
+    console.log(detections, layers, viewState)
     return (
         <>
             <div id={stream} ref={deckGlContainer} style={{backgroundColor: 'rgba(149, 149, 149, 0.09)', position: 'relative'}} >
                 <Typography variant="body2" style={{position: 'absolute', top: 10, left: 10, color: 'rgba(149, 149, 149, 0.6)'}}>
                     {label}
                 </Typography>
-                {trajectories.length > 0 && (
+                {detections.length > 0 && (
                     <DeckGL
                     views={new OrthographicView({
                         id: 'ortho',
