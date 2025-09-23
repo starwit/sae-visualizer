@@ -17,6 +17,8 @@ const translationEnEN = {
     "settings.title": "Settings",
     "settings.trajectoryDecay": "Trajectory Decay",
     "settings.trajectoryDecayDescription": "Set how long inactive trajectories remain visible (in seconds)",
+    "settings.heatmapExpiry": "Heatmap Expiry",
+    "settings.heatmapExpiryDescription": "Set time after which heatmap data expires (in seconds)",
     "settings.seconds": "Seconds",
     "common.cancel": "Cancel",
     "common.save": "Save"

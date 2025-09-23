@@ -17,6 +17,8 @@ const translationDeDE = {
     "settings.title": "Einstellungen",
     "settings.trajectoryDecay": "Trajektorienausblendung",
     "settings.trajectoryDecayDescription": "Zeit bis inaktive Trajektorien vollständig ausgeblendet sind (in Sekunden)",
+    "settings.heatmapExpiry": "Heatmap-Ablauf",
+    "settings.heatmapExpiryDescription": "Zeit nach der Heatmap-Daten entfernt werden (in Sekunden)",
     "settings.seconds": "Sekunden",
     "common.cancel": "Abbrechen",
     "common.save": "Speichern"

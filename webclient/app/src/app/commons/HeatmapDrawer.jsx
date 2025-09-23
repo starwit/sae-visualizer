@@ -4,11 +4,12 @@ import DeckGL from "@deck.gl/react";
 import { Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import WebSocketClient from "../services/WebSocketClient";
+import { useSettings } from "../contexts/SettingsContext";
 
 function HeatmapDrawer(props) {
     const { stream, running, label } = props;
-    // const {  } = useSettings();
-    
+    const { heatmapExpiryMs } = useSettings();
+
     const wsClient = useRef(new WebSocketClient());
 
     const deckGlContainer = useRef(null);
@@ -25,7 +26,6 @@ function HeatmapDrawer(props) {
     
     useEffect(() => {
         if (running) {
-            console.log("running effect", detections)
             setDetections([]);
             wsClient.current.setup(handleMessage, [stream]);
             wsClient.current.connect();
@@ -40,12 +40,22 @@ function HeatmapDrawer(props) {
             updateShape(detectionList);
 
             const currentTimestamp = new Date().getTime();
+
+            // Compile new detections
             const newDetections = detectionList.map(detection => ({
                 x: detection.coordinates.x,
                 y: detection.coordinates.y,
                 timestamp: currentTimestamp,
             }));
-            setDetections(oldDetections => oldDetections.concat(newDetections));
+            
+            setDetections(oldDetections => {
+                console.log("Old detections count:", oldDetections.length);
+                // Remove old detections based on heatmap expiry setting
+                const filteredOldDetections = oldDetections.filter(det => 
+                    (currentTimestamp - det.timestamp) <= heatmapExpiryMs
+                );
+                return filteredOldDetections.concat(newDetections);
+            });
         }
     }
 
