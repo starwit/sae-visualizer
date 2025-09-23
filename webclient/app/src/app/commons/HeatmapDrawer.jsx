@@ -136,14 +136,16 @@ function HeatmapDrawer(props) {
     const layers = [];
 
     if (detections && detections.length > 0) {
-        // Add points for the current positions (only for active trajectories)
+        const currentTimestamp = new Date().getTime();
         layers.push(
             new HeatmapLayer({
                 id: 'detections',
                 data: detections.map(d => ({
-                    position: [d.x, d.y]
+                    position: [d.x, d.y],
+                    age: currentTimestamp - d.timestamp,
                 })),
                 getPosition: d => d.position,
+                getWeight: d => 1 - (d.age / heatmapExpiryMs), // Weight decreases with age
                 aggregation: 'SUM',
                 radiusPixels: 20,
             })
