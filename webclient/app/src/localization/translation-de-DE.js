@@ -30,6 +30,7 @@ const translationDeDE = {
     "settings.milliseconds": "Millisekunden",
     "settings.coordinates": "Koordinaten",
     "settings.pixelPositions": "Pixelpositionen",
+    "settings.reset": "Zurücksetzen",
     "common.cancel": "Abbrechen",
     "common.save": "Speichern"
 };

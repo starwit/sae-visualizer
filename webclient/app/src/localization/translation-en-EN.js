@@ -30,6 +30,7 @@ const translationEnEN = {
     "settings.milliseconds": "Milliseconds",
     "settings.coordinates": "Coordinates",
     "settings.pixelPositions": "Pixel Positions",
+    "settings.reset": "Reset to Defaults",
     "common.cancel": "Cancel",
     "common.save": "Save"
 };

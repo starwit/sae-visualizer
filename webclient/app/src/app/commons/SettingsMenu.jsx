@@ -21,7 +21,8 @@ function SettingsMenu() {
         heatmapExpiry, setHeatmapExpiry,
         heatmapRadius, setHeatmapRadius,
         heatmapUseCoordinates, setHeatmapUseCoordinates,
-        heatmapMinUpdateInterval, setHeatmapMinUpdateInterval
+        heatmapMinUpdateInterval, setHeatmapMinUpdateInterval,
+        resetSettings
     } = useSettings();
     
     const [openDialog, setOpenDialog] = useState(false);
@@ -51,6 +52,12 @@ function SettingsMenu() {
         setHeatmapUseCoordinates(tempHeatmapUseCoordinates);
         setHeatmapMinUpdateInterval(Number(tempHeatmapMinUpdateInterval));
         handleCloseDialog();
+    };
+
+    function handleResetSettings() {
+        resetSettings();
+        handleCloseDialog();
+        handleOpenSettings();
     };
     
     return (
@@ -164,6 +171,9 @@ function SettingsMenu() {
                     />
                 </DialogContent>
                 <DialogActions>
+                    <Button onClick={handleResetSettings} color="warning">
+                        {t('settings.reset')}
+                    </Button>
                     <Button onClick={handleCloseDialog}>{t('common.cancel')}</Button>
                     <Button onClick={handleSaveSettings}>{t('common.save')}</Button>
                 </DialogActions>
