@@ -105,14 +105,14 @@ function SettingsMenu() {
                     />
                     
                     <Typography variant="h6" sx={{ mt: 1, mb: 0.25, fontSize: '1rem' }}>
-                        Heatmap Radius
+                        {t('settings.heatmapRadius')}
                     </Typography>
                     <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
-                        Set the radius of influence for each heatmap point (in pixels)
+                        {t('settings.heatmapRadiusDescription')}
                     </Typography>
                     <TextField
                         margin="dense"
-                        label="Pixels"
+                        label={t('settings.pixels')}
                         type="number"
                         size="small"
                         fullWidth
@@ -123,10 +123,10 @@ function SettingsMenu() {
                     />
                     
                     <Typography variant="h6" sx={{ mt: 1, mb: 0.25, fontSize: '1rem' }}>
-                        Heatmap Position Source
+                        {t('settings.heatmapPositionSource')}
                     </Typography>
                     <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
-                        Choose whether to use real-world coordinates or pixel positions for the heatmap rendering.
+                        {t('settings.heatmapPositionSourceDescription')}
                     </Typography>
                     <Button
                         variant={tempHeatmapUseCoordinates ? "contained" : "outlined"}
@@ -135,7 +135,7 @@ function SettingsMenu() {
                         sx={{ mr: 2 }}
                         size='small'
                     >
-                        Coordinates
+                        {t('settings.coordinates')}
                     </Button>
                     <Button
                         variant={!tempHeatmapUseCoordinates ? "contained" : "outlined"}
@@ -143,18 +143,18 @@ function SettingsMenu() {
                         onClick={() => setTempHeatmapUseCoordinates(false)}
                         size='small'
                     >
-                        Pixel Positions
+                        {t('settings.pixelPositions')}
                     </Button>
 
                     <Typography variant="h6" sx={{ mt: 2, mb: 0.25, fontSize: '1rem' }}>
-                        Heatmap Minimum Update Interval
+                        {t('settings.heatmapMinUpdateInterval')}
                     </Typography>
                     <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
-                        Set the minimum interval between heatmap updates to optimize performance (in milliseconds)
+                        {t('settings.heatmapMinUpdateIntervalDescription')}
                     </Typography>
                     <TextField
                         margin="dense"
-                        label="Milliseconds"
+                        label={t('settings.milliseconds')}
                         type="number"
                         size="small"
                         fullWidth

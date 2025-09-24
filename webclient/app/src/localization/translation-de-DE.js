@@ -19,7 +19,17 @@ const translationDeDE = {
     "settings.trajectoryDecayDescription": "Zeit bis inaktive Trajektorien vollständig ausgeblendet sind (in Sekunden)",
     "settings.heatmapExpiry": "Heatmap-Ablauf",
     "settings.heatmapExpiryDescription": "Zeit nach der Heatmap-Daten entfernt werden (in Sekunden)",
+    "settings.heatmapRadius": "Heatmap-Radius",
+    "settings.heatmapRadiusDescription": "Einflussradius für jeden Heatmap-Punkt festlegen (in Pixeln)",
+    "settings.heatmapPositionSource": "Heatmap-Positionsquelle",
+    "settings.heatmapPositionSourceDescription": "Quelle der Positionsdaten für die Heatmap-Darstellung",
+    "settings.heatmapMinUpdateInterval": "Heatmap-Mindestaktualisierungsintervall",
+    "settings.heatmapMinUpdateIntervalDescription": "Mindestintervall zwischen Heatmap-Updates zur Leistungsoptimierung festlegen (in Millisekunden)",
     "settings.seconds": "Sekunden",
+    "settings.pixels": "Pixel",
+    "settings.milliseconds": "Millisekunden",
+    "settings.coordinates": "Koordinaten",
+    "settings.pixelPositions": "Pixelpositionen",
     "common.cancel": "Abbrechen",
     "common.save": "Speichern"
 };

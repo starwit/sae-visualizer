@@ -19,7 +19,17 @@ const translationEnEN = {
     "settings.trajectoryDecayDescription": "Set how long inactive trajectories remain visible (in seconds)",
     "settings.heatmapExpiry": "Heatmap Expiry",
     "settings.heatmapExpiryDescription": "Set time after which heatmap data expires (in seconds)",
+    "settings.heatmapRadius": "Heatmap Radius",
+    "settings.heatmapRadiusDescription": "Set the radius of influence for each heatmap point (in pixels)",
+    "settings.heatmapPositionSource": "Heatmap Position Source",
+    "settings.heatmapPositionSourceDescription": "Choose whether to use real-world coordinates or pixel positions for the heatmap rendering",
+    "settings.heatmapMinUpdateInterval": "Heatmap Minimum Update Interval",
+    "settings.heatmapMinUpdateIntervalDescription": "Set the minimum interval between heatmap updates to optimize performance (in milliseconds)",
     "settings.seconds": "Seconds",
+    "settings.pixels": "Pixels",
+    "settings.milliseconds": "Milliseconds",
+    "settings.coordinates": "Coordinates",
+    "settings.pixelPositions": "Pixel Positions",
     "common.cancel": "Cancel",
     "common.save": "Save"
 };
