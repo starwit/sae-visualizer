@@ -32,6 +32,9 @@ const translationEnEN = {
     "settings.pixelPositions": "Pixel Positions",
     "settings.reset": "Reset to Defaults",
     "common.cancel": "Cancel",
-    "common.save": "Save"
+    "common.save": "Save",
+    "singleview.uploadBackgroundImage": "Upload background image",
+    "singleview.enterFullscreen": "Enter fullscreen",
+    "singleview.clearBackgroundImage": "Clear background image"
 };
 export default translationEnEN;

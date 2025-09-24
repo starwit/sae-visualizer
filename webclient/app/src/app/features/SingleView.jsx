@@ -1,6 +1,8 @@
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import NoPhotographyIcon from '@mui/icons-material/NoPhotography';
 import StopIcon from '@mui/icons-material/Stop';
 import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Tooltip, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -20,13 +22,29 @@ function SingleView(props) {
     const [backgroundImage, setBackgroundImage] = useState(null);
 
     useEffect(() => {
+        // Fetch available streams from backend
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
             if (response.data && response.data.length > 0) {
                 setSelectedStream(response.data[0]);
             }            
         });
+
+        // Load stored background image from localStorage if available
+        const storedImage = localStorage.getItem('backgroundImage');
+        if (storedImage) {
+            setBackgroundImage(storedImage);
+        }
     }, []);
+
+    useEffect(() => {
+        // Store image in localStorage
+        if (backgroundImage !== null) {
+            localStorage.setItem('backgroundImage', backgroundImage);
+        } else {
+            localStorage.removeItem('backgroundImage');
+        }
+    }, [backgroundImage]);
 
     function toggleStream() {
         setRunning(!running);
@@ -37,14 +55,23 @@ function SingleView(props) {
     };
 
     function handleImageUploadClick() {
-        fileInputRef.current.click();
+        if (backgroundImage === null) {
+            fileInputRef.current.click();
+        } else {
+            setBackgroundImage(null);
+            localStorage.removeItem('backgroundImage');
+            fileInputRef.current.value = null;
+        }
     };
-
+    
     function handleImageChange(event) {
         const file = event.target.files[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setBackgroundImage(imageUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setBackgroundImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -127,15 +154,15 @@ function SingleView(props) {
                             <PlayArrowIcon/> :
                             <StopIcon/>}
                     </Fab>
-                    <Tooltip title="Upload background image">
+                    <Tooltip title={backgroundImage !== null ? t('singleview.clearBackgroundImage') : t('singleview.uploadBackgroundImage')}>
                         <Fab 
                             color="secondary"
                             onClick={handleImageUploadClick}
                         >
-                            <AddPhotoAlternateIcon/>
+                            {backgroundImage !== null ? <NoPhotographyIcon/> : <AddAPhotoIcon/>}
                         </Fab>
                     </Tooltip>
-                    <Tooltip title="Enter fullscreen">
+                    <Tooltip title={t('singleview.enterFullscreen')}>
                         <Fab 
                             color="secondary"
                             onClick={toggleFullscreen}

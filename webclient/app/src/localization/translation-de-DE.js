@@ -32,6 +32,9 @@ const translationDeDE = {
     "settings.pixelPositions": "Pixelpositionen",
     "settings.reset": "Zurücksetzen",
     "common.cancel": "Abbrechen",
-    "common.save": "Speichern"
+    "common.save": "Speichern",
+    "singleview.uploadBackgroundImage": "Hintergrundbild hochladen",
+    "singleview.enterFullscreen": "Vollbildmodus aktivieren",
+    "singleview.clearBackgroundImage": "Hintergrundbild entfernen"
 };
 export default translationDeDE;
