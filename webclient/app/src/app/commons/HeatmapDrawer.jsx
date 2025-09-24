@@ -44,10 +44,16 @@ function HeatmapDrawer(props) {
             }));
             
             setDetections(oldDetections => {
-                // Remove old detections based on heatmap expiry setting
-                const filteredOldDetections = oldDetections.filter(det => 
+                // Find index of first old detection that is still valid
+                const firstValidIndex = oldDetections.findIndex(det => 
                     (currentTimestamp - det.timestamp) <= heatmapExpiryMs
                 );
+
+                // Remove expired detections
+                const filteredOldDetections = oldDetections.slice(firstValidIndex !== -1 ? firstValidIndex : oldDetections.length);
+                
+                console.log(`Old detections: ${oldDetections.length}, oldest age: ${oldDetections.length > 0 ? (currentTimestamp - oldDetections[0].timestamp) : 'N/A'}`);
+
                 return filteredOldDetections.concat(newDetections);
             });
         }
