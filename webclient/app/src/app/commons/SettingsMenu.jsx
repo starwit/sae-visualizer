@@ -20,7 +20,8 @@ function SettingsMenu() {
         trajectoryDecay, setTrajectoryDecay,
         heatmapExpiry, setHeatmapExpiry,
         heatmapRadius, setHeatmapRadius,
-        heatmapUseCoordinates, setHeatmapUseCoordinates
+        heatmapUseCoordinates, setHeatmapUseCoordinates,
+        heatmapMinUpdateInterval, setHeatmapMinUpdateInterval
     } = useSettings();
     
     const [openDialog, setOpenDialog] = useState(false);
@@ -28,12 +29,14 @@ function SettingsMenu() {
     const [tempHeatmapExpiry, setTempHeatmapExpiry] = useState(heatmapExpiry);
     const [tempHeatmapRadius, setTempHeatmapRadius] = useState(heatmapRadius);
     const [tempHeatmapUseCoordinates, setTempHeatmapUseCoordinates] = useState(heatmapUseCoordinates);
+    const [tempHeatmapMinUpdateInterval, setTempHeatmapMinUpdateInterval] = useState(heatmapMinUpdateInterval);
 
     function handleOpenSettings() {
         setTempTrajectoryDecay(trajectoryDecay);
         setTempHeatmapExpiry(heatmapExpiry);
         setTempHeatmapRadius(heatmapRadius);
         setTempHeatmapUseCoordinates(heatmapUseCoordinates);
+        setTempHeatmapMinUpdateInterval(heatmapMinUpdateInterval);
         setOpenDialog(true);
     };
     
@@ -46,6 +49,7 @@ function SettingsMenu() {
         setHeatmapExpiry(Number(tempHeatmapExpiry));
         setHeatmapRadius(Number(tempHeatmapRadius));
         setHeatmapUseCoordinates(tempHeatmapUseCoordinates);
+        setHeatmapMinUpdateInterval(Number(tempHeatmapMinUpdateInterval));
         handleCloseDialog();
     };
     
@@ -141,6 +145,23 @@ function SettingsMenu() {
                     >
                         Pixel Positions
                     </Button>
+
+                    <Typography variant="h6" sx={{ mt: 2, mb: 0.25, fontSize: '1rem' }}>
+                        Heatmap Minimum Update Interval
+                    </Typography>
+                    <Typography variant="caption" sx={{ mb: 0.5, display: 'block' }}>
+                        Set the minimum interval between heatmap updates to optimize performance (in milliseconds)
+                    </Typography>
+                    <TextField
+                        margin="dense"
+                        label="Milliseconds"
+                        type="number"
+                        size="small"
+                        fullWidth
+                        variant="outlined"
+                        value={tempHeatmapMinUpdateInterval}
+                        onChange={(e) => setTempHeatmapMinUpdateInterval(e.target.value)}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>{t('common.cancel')}</Button>

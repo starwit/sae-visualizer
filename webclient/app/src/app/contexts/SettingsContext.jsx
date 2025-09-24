@@ -5,6 +5,7 @@ const DEFAULT_TRAJECTORY_DECAY = 120;
 const DEFAULT_HEATMAP_EXPIRY = 60;
 const DEFAULT_HEATMAP_RADIUS = 20;
 const DEFAULT_HEATMAP_USE_COORDINATES = false;
+const DEFAULT_HEATMAP_MIN_UPDATE_INTERVAL = 200; // in ms
 
 const SettingsContext = createContext();
 
@@ -21,6 +22,7 @@ export const SettingsProvider = ({ children }) => {
     const [heatmapExpiry, setHeatmapExpiry] = useState(DEFAULT_HEATMAP_EXPIRY);
     const [heatmapRadius, setHeatmapRadius] = useState(DEFAULT_HEATMAP_RADIUS);
     const [heatmapUseCoordinates, setHeatmapUseCoordinates] = useState(DEFAULT_HEATMAP_USE_COORDINATES);
+    const [heatmapMinUpdateInterval, setHeatmapMinUpdateInterval] = useState(DEFAULT_HEATMAP_MIN_UPDATE_INTERVAL);
 
     const value = {
         trajectoryDecay,
@@ -36,6 +38,9 @@ export const SettingsProvider = ({ children }) => {
 
         heatmapUseCoordinates,
         setHeatmapUseCoordinates,
+
+        heatmapMinUpdateInterval,
+        setHeatmapMinUpdateInterval,
     };
 
     return (

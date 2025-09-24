@@ -8,7 +8,7 @@ import { useSettings } from "../contexts/SettingsContext";
 
 function HeatmapDrawer(props) {
     const { stream, running, label } = props;
-    const { heatmapExpiryMs, heatmapRadius, heatmapUseCoordinates } = useSettings();
+    const { heatmapExpiryMs, heatmapRadius, heatmapUseCoordinates, heatmapMinUpdateInterval } = useSettings();
 
     const wsClient = useRef(new WebSocketClient());
 
@@ -16,6 +16,10 @@ function HeatmapDrawer(props) {
 
     const [detections, setDetections] = useState([]);
     const [shape, setShape] = useState({});
+    
+    // Throttling state for performance optimization
+    const lastUpdateTime = useRef(0);
+    const pendingDetections = useRef([]); // array of arrays of detections to be added on next update
 
     useEffect(() => {
         if (running) {
@@ -32,31 +36,55 @@ function HeatmapDrawer(props) {
         if (detectionList.length > 0 && running) {
             updateShape(detectionList);
 
+            addDetectionsToPending(detectionList);
+
+            // Throttle updates - only update if enough time has passed
             const currentTimestamp = new Date().getTime();
-
-            // Compile new detections
-            const newDetections = detectionList.map(detection => ({
-                x: detection.coordinates.x,
-                y: detection.coordinates.y,
-                latitude: detection.coordinates.latitude,
-                longitude: detection.coordinates.longitude,
-                timestamp: currentTimestamp,
-            }));
-            
-            setDetections(oldDetections => {
-                // Find index of first old detection that is still valid
-                const firstValidIndex = oldDetections.findIndex(det => 
-                    (currentTimestamp - det.timestamp) <= heatmapExpiryMs
-                );
-
-                // Remove expired detections
-                const filteredOldDetections = oldDetections.slice(firstValidIndex !== -1 ? firstValidIndex : oldDetections.length);
-                
-                console.log(`Old detections: ${oldDetections.length}, oldest age: ${oldDetections.length > 0 ? (currentTimestamp - oldDetections[0].timestamp) : 'N/A'}`);
-
-                return filteredOldDetections.concat(newDetections);
-            });
+            if (currentTimestamp - lastUpdateTime.current >= heatmapMinUpdateInterval) {
+                updateDetections(currentTimestamp);
+                lastUpdateTime.current = currentTimestamp;
+            }
         }
+    }
+
+    function addDetectionsToPending(detectionList) {
+        const currentTimestamp = new Date().getTime();
+
+        // Compile new detections and add to pending buffer
+        const newDetections = detectionList.map(detection => ({
+            x: detection.coordinates.x,
+            y: detection.coordinates.y,
+            latitude: detection.coordinates.latitude,
+            longitude: detection.coordinates.longitude,
+            timestamp: currentTimestamp,
+        }));
+        
+        // Add entire array to pending detections buffer
+        pendingDetections.current.push(newDetections);
+    }
+
+    function updateDetections(currentTimestamp) {
+        if (pendingDetections.current.length === 0) return;
+        
+        setDetections(oldDetections => {
+            // Find index of first old detection that is still valid
+            const firstValidIndex = oldDetections.findIndex(det => 
+                (currentTimestamp - det.timestamp) <= heatmapExpiryMs
+            );
+
+            // Remove expired detections
+            const filteredOldDetections = oldDetections.slice(firstValidIndex !== -1 ? firstValidIndex : oldDetections.length);
+            
+            console.log(`Old detections: ${oldDetections.length}, oldest age: ${oldDetections.length > 0 ? (currentTimestamp - oldDetections[0].timestamp) : 'N/A'}`);
+
+            // Add all pending detections
+            const result = filteredOldDetections.concat(...pendingDetections.current);
+            
+            // Clear pending buffer
+            pendingDetections.current = [];
+            
+            return result;
+        });
     }
     
     function updateShape(trackedObjectList) {
@@ -86,6 +114,7 @@ function HeatmapDrawer(props) {
                 aggregation: 'SUM',
                 radiusPixels: heatmapRadius,
                 coordinateSystem: COORDINATE_SYSTEM.LNGLAT,
+                debounceTimeout: 200
             })
         );
     }
