@@ -1,5 +1,5 @@
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
-import { OrthographicView } from "@deck.gl/core";
+import { COORDINATE_SYSTEM, MapView, OrbitView, OrthographicView } from "@deck.gl/core";
 import DeckGL from "@deck.gl/react";
 import { Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
@@ -8,7 +8,7 @@ import { useSettings } from "../contexts/SettingsContext";
 
 function HeatmapDrawer(props) {
     const { stream, running, label } = props;
-    const { heatmapExpiryMs } = useSettings();
+    const { heatmapExpiryMs, heatmapRadius, heatmapUseCoordinates } = useSettings();
 
     const wsClient = useRef(new WebSocketClient());
 
@@ -17,13 +17,6 @@ function HeatmapDrawer(props) {
     const [detections, setDetections] = useState([]);
     const [shape, setShape] = useState({});
 
-    const [viewState, setViewState] = useState({
-        target: [0, 0, 0],
-        zoom: -1,
-        minZoom: -5,
-        maxZoom: 10
-    });
-    
     useEffect(() => {
         if (running) {
             setDetections([]);
@@ -45,11 +38,12 @@ function HeatmapDrawer(props) {
             const newDetections = detectionList.map(detection => ({
                 x: detection.coordinates.x,
                 y: detection.coordinates.y,
+                latitude: detection.coordinates.latitude,
+                longitude: detection.coordinates.longitude,
                 timestamp: currentTimestamp,
             }));
             
             setDetections(oldDetections => {
-                console.log("Old detections count:", oldDetections.length);
                 // Remove old detections based on heatmap expiry setting
                 const filteredOldDetections = oldDetections.filter(det => 
                     (currentTimestamp - det.timestamp) <= heatmapExpiryMs
@@ -58,48 +52,6 @@ function HeatmapDrawer(props) {
             });
         }
     }
-
-    useEffect(() => {
-        function updateDimensions() {
-            if (shape) {
-                const containerWidth = deckGlContainer.current.clientWidth;
-                const containerHeight = deckGlContainer.current.clientHeight;
-
-                const { width: frameWidth, height: frameHeight } = shape;
-
-                // Calculate zoom level to fit view
-                const { width: viewWidth, height: viewHeight } = calculateViewportDimensions(
-                    containerWidth,
-                    containerHeight,
-                    frameWidth,
-                    frameHeight
-                );
-
-                // Calculate zoom to fit the frame dimensions to the viewport
-                const scale = Math.min(
-                    viewWidth / frameWidth,
-                    viewHeight / frameHeight
-                );
-
-                const zoom = Math.log2(scale);
-
-                if ( !(Number.isFinite(zoom) && Number.isFinite(frameHeight) && Number.isFinite(frameWidth)) ) {
-                    return;
-                }
-
-                setViewState({
-                    target: [frameWidth / 2, frameHeight / 2, 0],
-                    zoom,
-                    minZoom: -5,
-                    maxZoom: 10
-                });
-            }
-        };
-
-        updateDimensions();
-        window.addEventListener('resize', updateDimensions)
-        return () => window.removeEventListener('resize', updateDimensions);
-    }, [shape]);
     
     function updateShape(trackedObjectList) {
         const newShape = trackedObjectList[0].shape;
@@ -111,28 +63,6 @@ function HeatmapDrawer(props) {
         });
     }
 
-    // Function to calculate the viewport dimensions that maintain aspect ratio
-    function calculateViewportDimensions(containerWidth, containerHeight, frameWidth, frameHeight) {
-        if (!frameWidth || !frameHeight) return { width: containerWidth, height: containerHeight };
-
-        const frameAspectRatio = frameWidth / frameHeight;
-        const containerAspectRatio = containerWidth / containerHeight;
-
-        let viewWidth, viewHeight;
-
-        if (containerAspectRatio > frameAspectRatio) {
-            // Container is wider than frame - constrain by height
-            viewHeight = containerHeight;
-            viewWidth = viewHeight * frameAspectRatio;
-        } else {
-            // Container is taller than frame - constrain by width
-            viewWidth = containerWidth;
-            viewHeight = viewWidth / frameAspectRatio;
-        }
-
-        return { width: viewWidth, height: viewHeight };
-    };
-
     const layers = [];
 
     if (detections && detections.length > 0) {
@@ -141,13 +71,15 @@ function HeatmapDrawer(props) {
             new HeatmapLayer({
                 id: 'detections',
                 data: detections.map(d => ({
-                    position: [d.x, d.y],
+                    positionPx: [(d.x - shape.width / 2) / 1000, -(d.y - shape.height / 2) / 1000],
+                    positionCoords: [d.longitude, d.latitude],
                     age: currentTimestamp - d.timestamp,
                 })),
-                getPosition: d => d.position,
+                getPosition: d => heatmapUseCoordinates ? d.positionCoords : d.positionPx,
                 getWeight: d => 1 - (d.age / heatmapExpiryMs), // Weight decreases with age
                 aggregation: 'SUM',
-                radiusPixels: 20,
+                radiusPixels: heatmapRadius,
+                coordinateSystem: COORDINATE_SYSTEM.LNGLAT,
             })
         );
     }
@@ -160,15 +92,15 @@ function HeatmapDrawer(props) {
                 </Typography>
                 {detections.length > 0 && (
                     <DeckGL
-                    views={new OrthographicView({
-                        id: 'ortho',
-                        flipY: true // Y increases from top to bottom in image space
+                    views={new MapView({
+                        id: 'view', controller: true,
                     })}
-                    viewState={viewState}
-                    controller={false}
                     layers={layers}
-                    getCursor={() => 'default'}
-                    _pickable={false}
+                    initialViewState={{
+                        longitude: 0,
+                        latitude: 0,
+                        zoom: 0,
+                    }}
                     />
                 )}
             </div>

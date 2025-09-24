@@ -1,6 +1,6 @@
 import { Container, CssBaseline } from "@mui/material";
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import ErrorHandler from "./commons/errorHandler/ErrorHandler";
 import HeatmapDrawer from "./commons/HeatmapDrawer";
 import StarwitAppBar from "./commons/StarwitAppBar";
@@ -22,6 +22,7 @@ function App() {
                     <StarwitAppBar />
                     <Container sx={{paddingTop: "4em"}}>
                         <Routes>
+                            <Route index element={<Navigate to="/map" replace />} />
                             <Route path="/heatmap" element={<SingleView DrawerComponent={HeatmapDrawer} title={t('heatmap.title')} />} />
                             <Route path="/trajectory" element={<SingleView DrawerComponent={TrajectoryDrawer} title={t('trajectory.title')} />} />
                             <Route path="/grid" element={<GridView />} />
