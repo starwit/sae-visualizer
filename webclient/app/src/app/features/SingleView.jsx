@@ -1,14 +1,16 @@
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Typography, Tooltip } from "@mui/material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import NoPhotographyIcon from '@mui/icons-material/NoPhotography';
+import StopIcon from '@mui/icons-material/Stop';
+import { Box, Fab, FormControl, InputLabel, MenuItem, Select, Stack, Tooltip, Typography } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import TrajectoryDrawer from "../commons/TrajectoryDrawer";
 import StreamRest from "../services/StreamRest";
 
-function TrajectoryView() {
+function SingleView(props) {
+    const { DrawerComponent, title } = props;
     const { t } = useTranslation();
     const streamRest = useMemo(() => new StreamRest(), []);
     const fileInputRef = useRef(null);
@@ -20,44 +22,66 @@ function TrajectoryView() {
     const [backgroundImage, setBackgroundImage] = useState(null);
 
     useEffect(() => {
+        // Fetch available streams from backend
         streamRest.getAvailableStreams().then(response => {
             setStreams(response.data);
             if (response.data && response.data.length > 0) {
                 setSelectedStream(response.data[0]);
             }            
         });
+
+        // Load stored background image from localStorage if available
+        const storedImage = localStorage.getItem('backgroundImage');
+        if (storedImage) {
+            setBackgroundImage(storedImage);
+        }
     }, []);
+
+    useEffect(() => {
+        // Store image in localStorage
+        if (backgroundImage !== null) {
+            localStorage.setItem('backgroundImage', backgroundImage);
+        } else {
+            localStorage.removeItem('backgroundImage');
+        }
+    }, [backgroundImage]);
 
     function toggleStream() {
         setRunning(!running);
     }
 
-    const handleStreamSelectChange = (event) => {
+    function handleStreamSelectChange(event) {
         setSelectedStream(event.target.value);
     };
 
-    const handleImageUploadClick = () => {
-        fileInputRef.current.click();
+    function handleImageUploadClick() {
+        if (backgroundImage === null) {
+            fileInputRef.current.click();
+        } else {
+            setBackgroundImage(null);
+            localStorage.removeItem('backgroundImage');
+            fileInputRef.current.value = null;
+        }
     };
-
-    const handleImageChange = (event) => {
+    
+    function handleImageChange(event) {
         const file = event.target.files[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setBackgroundImage(imageUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setBackgroundImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const toggleFullscreen = () => {
+    function toggleFullscreen() {
         if (!document.fullscreenElement) {
             containerRef.current.requestFullscreen().catch(err => {
                 console.error(`Error attempting to enable fullscreen: ${err.message}`);
             });
         }
     };
-
-    console.log(`selectedStream: ${selectedStream}`);
-    console.log(`running: ${running}`);
 
     return (
         <>
@@ -84,7 +108,7 @@ function TrajectoryView() {
                         backgroundRepeat: 'no-repeat'
                     }}
                 >
-                    <TrajectoryDrawer
+                    <DrawerComponent
                         key={selectedStream}
                         stream={selectedStream}
                         running={running}/>
@@ -96,7 +120,7 @@ function TrajectoryView() {
                 right: 10
             }}>
                 <Typography variant="h1">
-                    {t('trajectory.title')}
+                    {title}
                 </Typography>
             </Box>
             <Box sx={{
@@ -130,15 +154,15 @@ function TrajectoryView() {
                             <PlayArrowIcon/> :
                             <StopIcon/>}
                     </Fab>
-                    <Tooltip title="Upload background image">
+                    <Tooltip title={backgroundImage !== null ? t('singleview.clearBackgroundImage') : t('singleview.uploadBackgroundImage')}>
                         <Fab 
                             color="secondary"
                             onClick={handleImageUploadClick}
                         >
-                            <AddPhotoAlternateIcon/>
+                            {backgroundImage !== null ? <NoPhotographyIcon/> : <AddAPhotoIcon/>}
                         </Fab>
                     </Tooltip>
-                    <Tooltip title="Enter fullscreen">
+                    <Tooltip title={t('singleview.enterFullscreen')}>
                         <Fab 
                             color="secondary"
                             onClick={toggleFullscreen}
@@ -159,4 +183,4 @@ function TrajectoryView() {
     )
 }
 
-export default TrajectoryView;
+export default SingleView;
