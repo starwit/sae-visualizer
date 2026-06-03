@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -64,6 +65,7 @@ public class CustomClientRegistration {
             .scope(scope)
             .clientId(clientId)
             .clientSecret(clientSecret)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri(redirectUri)
             .providerConfigurationMetadata(Map.of("end_session_endpoint", endSessionEndpoint))

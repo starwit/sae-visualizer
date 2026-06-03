@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,8 +25,6 @@ import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMap
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
@@ -87,22 +84,8 @@ public class SecurityConfig {
                                 .matcher(HttpMethod.GET, "/logout")))
                 // Maybe
                 // https://stackoverflow.com/questions/74939220/classnotfoundexception-org-springframework-security-oauth2-server-resource-web
-                .oauth2Login(Customizer.withDefaults())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .oauth2Login(Customizer.withDefaults());
         return http.build();
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        Converter<Jwt, Collection<GrantedAuthority>> grantedAuthoritiesConverter = jwt -> {
-            @SuppressWarnings("unchecked")
-            List<String> tokenRoles = (List<String>) jwt.getClaimAsMap("realm_access").get("roles");
-            return tokenRoles.stream().map(r -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + r)).toList();
-        };
-
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
-        return jwtAuthenticationConverter;
     }
 
     // Taken from
@@ -110,6 +93,9 @@ public class SecurityConfig {
     @Component
     @RequiredArgsConstructor
     static class GrantedAuthoritiesMapperImpl implements GrantedAuthoritiesMapper {
+
+        @Autowired
+        private RoleMapper roleMapper;
 
         @SuppressWarnings("unchecked")
         @Override
@@ -130,7 +116,8 @@ public class SecurityConfig {
                             LOG.error("claims do not contain 'realm_access' map");
                             return;
                         }
-                        final List<String> roles = (List<String>) realmAccessMap.get("roles");
+                        List<String> roles = (List<String>) realmAccessMap.get("roles");
+                        roles = roleMapper.mapAllRoles(roles);
 
                         mappedAuthorities.addAll(
                                 roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList());

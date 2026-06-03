@@ -68,6 +68,14 @@ spring.security.oauth2.client.registration.keycloak.client-id=aicockpit
 spring.security.oauth2.client.registration.keycloak.client-secret=aicockpit
 spring.security.oauth2.client.registration.keycloak.scope=openid
 ```
+__Authorization / Role Mapping__
+
+This application needs users to be in certain roles. Internally these roles are admin, user, reader. As these names are very generic, app supports arbitrary names to be mapped to these three internal roles. Mapping is configured as follows:
+```properties
+security.rolemapping.admin=visualizer_admin
+security.rolemapping.user=visualizer_user
+security.rolemapping.reader=visualizer_reader
+```
 
 ## License
 Software in this repository is licensed under the AGPL-3.0 license. See [license agreement](LICENSE) for more details.
